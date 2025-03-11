@@ -8,8 +8,8 @@ const pool = new Pool({
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE,
-  max: 10, // max number of clients in the pool
-  idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
+  max: 10, 
+  idleTimeoutMillis: 30000, 
 });
 
 export const query = async (text, params) => {
@@ -18,13 +18,13 @@ export const query = async (text, params) => {
   try {
     const res = await client.query(text, params);
     const duration = Date.now() - start;
-    console.log('executed query', { text, duration, rows: res.rowCount }); // Optional logging
+    console.log('executed query', { text, duration, rows: res.rowCount });
     return res;
   } catch (error) {
     console.error("Error executing query:", text, error);
     throw error;
   } finally {
-    client.release(); // releases the client back to the pool
+    client.release(); 
   }
 };
 

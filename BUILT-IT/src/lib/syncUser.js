@@ -1,4 +1,3 @@
-// lib/syncUser.js
 import { query } from './db';
 
 export async function syncUserToDB({ clerkUserId, email, role }) {
