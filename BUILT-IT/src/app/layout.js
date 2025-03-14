@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 export const metadata = {
   title: "Hostel Management System - IIT Indore",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }) {
         <body>
           <Navbar /> 
           {children}
+          <Footer/>
         </body>
       </html>
     </ClerkProvider>
