@@ -1,4 +1,5 @@
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 export const metadata = {
   title: "Hostel Management System - IIT Indore",
@@ -7,12 +8,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
-        <Navbar />
-        {children}
-      </body>
-    </html>
+      <html lang="en">
+        <body>
+          <Navbar /> 
+          {children}
+          <Footer/>
+        </body>
+      </html>
   );
 }
 
