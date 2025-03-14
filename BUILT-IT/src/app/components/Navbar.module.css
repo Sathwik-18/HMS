@@ -1,13 +1,13 @@
 /* Navbar.module.css */
 
 /* Navbar container */
-.navbar {
+/* .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: 60px;
-    background-color: #1c2f58; /* Dark blue */
+    background-color: #1c2f58; 
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -15,7 +15,6 @@
     z-index: 999;
   }
   
-  /* Left side: Logo & Brand */
   .navbarLeft {
     display: flex;
     align-items: center;
@@ -40,13 +39,11 @@
     text-decoration: none;
   }
   
-  /* Right side container */
   .navbarRight {
     display: flex;
     align-items: center;
   }
   
-  /* Navigation Links */
   .navLinks {
     display: flex;
     list-style: none;
@@ -55,7 +52,6 @@
     padding: 0;
   }
   
-  /* Navigation link items */
   .navLinks li a {
     color: #fff;
     text-decoration: none;
@@ -65,16 +61,14 @@
   }
   
   .navLinks li a:hover {
-    color: #ffd700; /* Golden hover color */
+    color: #ffd700; 
   }
   
-  /* User Button Container */
   .userButton {
     display: flex;
     align-items: center;
   }
   
-  /* Hamburger button (hidden on desktop) */
   .hamburger {
     display: none;
     flex-direction: column;
@@ -84,7 +78,6 @@
     cursor: pointer;
   }
   
-  /* Hamburger bars */
   .bar {
     width: 25px;
     height: 3px;
@@ -92,7 +85,6 @@
     transition: all 0.3s;
   }
   
-  /* Mobile responsive styles */
   @media (max-width: 768px) {
     .navLinks {
       position: absolute;
@@ -112,5 +104,115 @@
     .hamburger {
       display: flex;
     }
+  } */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbarLeft .logoLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  
+  .logo {
+    height: 40px;
+    margin-right: 0.5rem;
+  }
+  
+  .brandName {
+    font-size: 1.25rem;
+    color: #1c2f58;
+  }
+  
+  .navbarRight {
+    display: flex;
+    align-items: center;
+  }
+  
+  .navLinks {
+    display: flex;
+    list-style: none;
+    gap: 1rem;
+  }
+  
+  .navLinks li a {
+    text-decoration: none;
+    color: #333;
+  }
+  
+  .hamburger {
+    display: none; 
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .hamburger .bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 4px 0;
+    background-color: #1c2f58;
+  }
+  
+  .profileContainer {
+    position: relative;
+    margin-left: 1rem;
+  }
+  
+  .profileIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  
+  .profilePic {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .profilePicFallback {
+    width: 100%;
+    height: 100%;
+    background-color: #ccc;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.25rem;
+  }
+  
+  .profileDropdown {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+  }
+  
+  .profileEmail {
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .signOutButton {
+    padding: 0.5rem 1rem;
+    background-color: #1c2f58;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
   }
   

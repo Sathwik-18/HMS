@@ -1,10 +1,9 @@
 "use client";
-
-import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function GuardDashboard() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const [session, setSession] = useState(null);
   const [checkInOutMessage, setCheckInOutMessage] = useState("");
   const [visitorData, setVisitorData] = useState({
     name: "",
@@ -13,9 +12,25 @@ export default function GuardDashboard() {
   });
   const [visitorMessage, setVisitorMessage] = useState("");
 
+  useEffect(() => {
+    async function getSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+    }
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!session) return <div>Please sign in to access the Guard Dashboard.</div>;
+
   // Simulate check-in/check-out event
   const handleCheckInOut = async (action) => {
-    // In a real app, you’d call an API to log this event.
     setCheckInOutMessage(`Successfully recorded ${action}.`);
     setTimeout(() => setCheckInOutMessage(""), 3000);
   };
@@ -23,15 +38,10 @@ export default function GuardDashboard() {
   // Simulate visitor record submission
   const handleVisitorSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, you’d send visitorData (and handle file uploads) via an API.
     setVisitorMessage("Visitor details recorded successfully.");
     setVisitorData({ name: "", purpose: "", photo: null });
     setTimeout(() => setVisitorMessage(""), 3000);
   };
-
-  if (!isLoaded) return <div>Loading...</div>;
-  if (!isSignedIn)
-    return <div>Please sign in to access the Guard Dashboard.</div>;
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -40,22 +50,13 @@ export default function GuardDashboard() {
       {/* Check-In/Check-Out Section */}
       <section style={{ marginBottom: "2rem" }}>
         <h2>Check-In/Check-Out Management</h2>
-        <p>
-          Use the buttons below to log student or visitor check-ins and check-outs.
-        </p>
-        <button onClick={() => handleCheckInOut("Check-In")}>
-          Check In
-        </button>
-        <button
-          onClick={() => handleCheckInOut("Check-Out")}
-          style={{ marginLeft: "1rem" }}
-        >
+        <p>Use the buttons below to log student or visitor check-ins and check-outs.</p>
+        <button onClick={() => handleCheckInOut("Check-In")}>Check In</button>
+        <button onClick={() => handleCheckInOut("Check-Out")} style={{ marginLeft: "1rem" }}>
           Check Out
         </button>
         {checkInOutMessage && (
-          <p style={{ marginTop: "1rem", color: "green" }}>
-            {checkInOutMessage}
-          </p>
+          <p style={{ marginTop: "1rem", color: "green" }}>{checkInOutMessage}</p>
         )}
       </section>
       
@@ -70,9 +71,7 @@ export default function GuardDashboard() {
               <input
                 type="text"
                 value={visitorData.name}
-                onChange={(e) =>
-                  setVisitorData({ ...visitorData, name: e.target.value })
-                }
+                onChange={(e) => setVisitorData({ ...visitorData, name: e.target.value })}
                 required
               />
             </label>
@@ -83,9 +82,7 @@ export default function GuardDashboard() {
               <input
                 type="text"
                 value={visitorData.purpose}
-                onChange={(e) =>
-                  setVisitorData({ ...visitorData, purpose: e.target.value })
-                }
+                onChange={(e) => setVisitorData({ ...visitorData, purpose: e.target.value })}
                 required
               />
             </label>
@@ -97,10 +94,7 @@ export default function GuardDashboard() {
                 type="file"
                 accept="image/*"
                 onChange={(e) =>
-                  setVisitorData({
-                    ...visitorData,
-                    photo: e.target.files[0],
-                  })
+                  setVisitorData({ ...visitorData, photo: e.target.files[0] })
                 }
               />
             </label>

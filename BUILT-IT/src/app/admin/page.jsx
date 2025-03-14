@@ -1,10 +1,29 @@
 "use client";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
-  const { isSignedIn } = useUser();
-  if (!isSignedIn) return <div>Please sign in to access the Admin Dashboard.</div>;
+  const [session, setSession] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function getSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+    }
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!session) return <div>Please sign in to access the Admin Dashboard.</div>;
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -38,6 +57,11 @@ export default function AdminDashboard() {
         <li style={{ marginBottom: "1rem" }}>
           <Link href="/admin/notification-management">
             <button style={buttonStyle}>Notification Management</button>
+          </Link>
+        </li>
+        <li style={{ marginBottom: "1rem" }}>
+          <Link href="/admin/feedback">
+            <button style={buttonStyle}>Feedbacks</button>
           </Link>
         </li>
       </ul>

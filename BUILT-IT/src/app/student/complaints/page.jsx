@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function StudentComplaints() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const [session, setSession] = useState(null);
   const [student, setStudent] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [loadingComplaints, setLoadingComplaints] = useState(true);
@@ -16,11 +16,24 @@ export default function StudentComplaints() {
   const [photo, setPhoto] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
 
-  // Fetch student record (using the roll number derived from email)
+  // Get session using Supabase auth
+  useEffect(() => {
+    async function getSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+    }
+    getSession();
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  // Fetch student record once session is available
   useEffect(() => {
     async function fetchStudent() {
-      if (isLoaded && isSignedIn && user) {
-        const email = user.primaryEmailAddress.emailAddress;
+      if (session && session.user) {
+        const email = session.user.email;
         const rollNo = email.split("@")[0];
         try {
           const res = await fetch(`/api/student?rollNo=${rollNo}`);
@@ -36,9 +49,9 @@ export default function StudentComplaints() {
       }
     }
     fetchStudent();
-  }, [isLoaded, isSignedIn, user]);
+  }, [session]);
 
-  // Once student is loaded, fetch their complaints
+  // Fetch complaints once student is loaded
   useEffect(() => {
     async function fetchComplaints() {
       if (student) {
@@ -58,6 +71,29 @@ export default function StudentComplaints() {
       }
     }
     fetchComplaints();
+  }, [student]);
+
+  // Real-time subscription for complaints changes (optional)
+  useEffect(() => {
+    if (!student) return;
+    // Subscribe to all changes in the "complaints" table for this student.
+    const channel = supabase
+      .channel('complaints-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'complaints', filter: `student_id=eq.${student.student_id}` },
+        payload => {
+          // When a change occurs, re-fetch complaints.
+          fetch(`/api/complaints?studentId=${student.student_id}`)
+            .then(res => res.json())
+            .then(data => setComplaints(data))
+            .catch(err => console.error("Realtime update error:", err));
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [student]);
 
   // Handle file input change: convert file to base64 string
@@ -94,11 +130,11 @@ export default function StudentComplaints() {
         setUploadStatus("Error: " + data.error);
       } else {
         setUploadStatus("Complaint filed successfully!");
-        // Clear form
+        // Clear form fields
         setComplaintType("infrastructure");
         setDescription("");
         setPhoto(null);
-        // Refresh complaint list
+        // Refresh complaints list
         const res2 = await fetch(`/api/complaints?studentId=${student.student_id}`);
         const data2 = await res2.json();
         setComplaints(data2);
@@ -108,8 +144,7 @@ export default function StudentComplaints() {
     }
   };
 
-  if (!isLoaded) return <div>Loading user info...</div>;
-  if (!isSignedIn) return <div>Please sign in to view your complaints.</div>;
+  if (!session) return <div>Please sign in to view your complaints.</div>;
   if (error) return <div style={{ color: "red", padding: "2rem" }}>Error: {error}</div>;
   if (!student) return <div>Loading student record...</div>;
 
@@ -126,6 +161,7 @@ export default function StudentComplaints() {
               Type:{" "}
               <select value={complaintType} onChange={(e) => setComplaintType(e.target.value)}>
                 <option value="infrastructure">Infrastructure</option>
+                <option value="infrastructure">Technical</option>
                 <option value="cleanliness">Cleanliness</option>
                 <option value="other">Other</option>
               </select>
@@ -162,7 +198,7 @@ export default function StudentComplaints() {
         ) : (
           <ul>
             {complaints.map((comp) => (
-              <li key={comp.complaint_id} style={{ marginBottom: "1rem" }}>
+              <li key={comp.complaint_id} style={{ marginBottom: "1rem", borderBottom: "1px solid #ccc", paddingBottom: "1rem" }}>
                 <p>
                   <strong>Type:</strong> {comp.type} | <strong>Status:</strong> {comp.status}
                 </p>
@@ -179,6 +215,16 @@ export default function StudentComplaints() {
                 <p>
                   <strong>Filed on:</strong> {new Date(comp.created_at).toLocaleString()}
                 </p>
+                {comp.closed_at && (
+                  <p>
+                    <strong>Closed at:</strong> {new Date(comp.closed_at).toLocaleString()}
+                  </p>
+                )}
+                {comp.resolution_info && (
+                  <p>
+                    <strong>Resolution Info:</strong> {comp.resolution_info}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
