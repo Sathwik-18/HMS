@@ -108,7 +108,6 @@ export default function MaintenanceTracking() {
   return (
     <div style={{ padding: "2rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
       
-      {/* Left Column - 80%: Table of Complaints */}
       <div style={{ width: "80%" }}>
         <h1>Maintenance & Infrastructure Tracking</h1>
         <table style={tableStyle}>
@@ -189,8 +188,7 @@ export default function MaintenanceTracking() {
         )}
       </div>
 
-      {/* Right Column - 20%: Bar Graph Overview */}
-      <div style={{ width: "20%", minWidth: "200px" }}>
+      <div style={{ width: "10%", minWidth: "200px" }}>
         <h2>Complaints Overview</h2>
         <div style={{ height: "300px" }}>
           <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />

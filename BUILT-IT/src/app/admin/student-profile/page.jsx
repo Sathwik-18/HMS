@@ -32,7 +32,7 @@ export default async function StudentProfile({ searchParams }) {
                 width: '100%'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <Link href="/admin/student-room-management" style={{
+                    <Link href="/admin/students-data" style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         color: '#007bff', // Blue color for button

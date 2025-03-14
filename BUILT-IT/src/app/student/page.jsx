@@ -86,10 +86,10 @@ export default function StudentDashboard() {
         <section style={{ ...sectionStyle, ...actionsSection }}>
           <h2 style={sectionHeadingStyle}>Actions</h2>
           <p style={actionLinkStyle}>
-            <Link href="/complaints" style={linkStyle}>File/View Complaints</Link>
+            <Link href="/student/complaints" style={linkStyle}>File/View Complaints</Link>
           </p>
           <p style={actionLinkStyle}>
-            <Link href="/room-change-request" style={linkStyle}>Request a Room Change</Link>
+            <Link href="/student/room-change-request" style={linkStyle}>Request a Room Change</Link>
           </p>
         </section>
       </div>

@@ -11,8 +11,13 @@ export default function AdminDashboard() {
       <h1>Admin Dashboard</h1>
       <ul style={{ listStyle: "none", padding: 0 }}>
         <li style={{ marginBottom: "1rem" }}>
-          <Link href="/admin/student-room-management">
-            <button style={buttonStyle}>Student & Room Management</button>
+          <Link href="/admin/students-data">
+            <button style={buttonStyle}>Student's Data</button>
+          </Link>
+        </li>
+        <li style={{ marginBottom: "1rem" }}>
+          <Link href="/admin/room-request-tracking">
+            <button style={buttonStyle}>Room Change Requests Tracking</button>
           </Link>
         </li>
         <li style={{ marginBottom: "1rem" }}>

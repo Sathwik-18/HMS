@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function SpreadsheetUpload() {
   const [fileContent, setFileContent] = useState("");
@@ -31,7 +32,10 @@ export default function SpreadsheetUpload() {
       });
       const data = await res.json();
       if (data.success) {
-        setUploadStatus("Upload successful!");
+        setUploadStatus("Upload successful! Processed " + data.successCount + " rows.");
+        if (data.errors && data.errors.length > 0) {
+          setUploadStatus((prev) => prev + " Errors: " + data.errors.join(" | "));
+        }
       } else {
         setUploadStatus("Upload failed: " + data.error);
       }
@@ -39,18 +43,78 @@ export default function SpreadsheetUpload() {
       console.error("Error uploading CSV:", error);
       setUploadStatus("Upload failed: " + error.message);
     }
+    // Clear the status after 5 seconds
+    setTimeout(() => {
+      setUploadStatus("");
+    }, 5000);
   };
 
   return (
-    <div style={{ padding: "2rem", border: "1px solid #ccc", marginBottom: "2rem" }}>
-      <h2>Spreadsheet Integration</h2>
-      <p>Upload a CSV file to import student records.</p>
-      <input type="file" accept=".csv" onChange={handleFileChange} />
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      style={cardStyle}
+    >
+      <h2 style={headingStyle}>Spreadsheet Integration</h2>
+      <p style={textStyle}>Upload a CSV file to import student records.</p>
+      <input type="file" accept=".csv" onChange={handleFileChange} style={inputStyle} />
       <br />
-      <button onClick={handleUpload} style={{ marginTop: "1rem" }}>
+      <motion.button 
+        onClick={handleUpload} 
+        style={buttonStyle}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
         Upload CSV
-      </button>
-      {uploadStatus && <p>{uploadStatus}</p>}
-    </div>
+      </motion.button>
+      {uploadStatus && <p style={statusStyle}>{uploadStatus}</p>}
+    </motion.div>
   );
 }
+
+const cardStyle = {
+  padding: "2rem",
+  border: "1px solid #e0e0e0",
+  borderRadius: "0.75rem",
+  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+  marginBottom: "2rem",
+  backgroundColor: "#fff",
+  maxWidth: "600px",
+  margin: "2rem auto",
+};
+
+const headingStyle = {
+  marginBottom: "1rem",
+  fontSize: "1.5rem",
+  fontWeight: "600",
+  color: "#333",
+};
+
+const textStyle = {
+  marginBottom: "1rem",
+  color: "#555",
+};
+
+const inputStyle = {
+  marginBottom: "1rem",
+  padding: "0.5rem",
+  border: "1px solid #ccc",
+  borderRadius: "4px",
+  width: "100%",
+};
+
+const buttonStyle = {
+  padding: "0.75rem 1.5rem",
+  backgroundColor: "#1c2f58",
+  color: "#fff",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+};
+
+const statusStyle = {
+  marginTop: "1rem",
+  fontWeight: "500",
+  color: "#1c2f58",
+};

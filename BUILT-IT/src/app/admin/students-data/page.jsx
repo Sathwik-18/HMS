@@ -3,11 +3,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiFilter } from "react-icons/fi";
 
-export default function StudentRoomManagement() {
+export default function StudentsData() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter states
   const [batchFilter, setBatchFilter] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
   const [hostelFilter, setHostelFilter] = useState("");
@@ -27,7 +26,6 @@ export default function StudentRoomManagement() {
     fetchStudents();
   }, []);
 
-  // Filter the students based on selected filters
   const filteredStudents = students.filter((student) => {
     const batchMatch = batchFilter ? student.batch.toString() === batchFilter : true;
     const deptMatch = deptFilter ? student.department === deptFilter : true;
@@ -35,7 +33,6 @@ export default function StudentRoomManagement() {
     return batchMatch && deptMatch && hostelMatch;
   });
 
-  // Extract unique values for filters
   const uniqueBatches = Array.from(new Set(students.map((s) => s.batch))).sort();
   const uniqueDepts = Array.from(new Set(students.map((s) => s.department)));
   const uniqueHostels = Array.from(new Set(students.map((s) => s.hostel_block))).filter(Boolean);
@@ -44,62 +41,35 @@ export default function StudentRoomManagement() {
 
   return (
     <div style={{ padding: "2rem" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>Student &amp; Room Management</h1>
+      <h1>Students Data</h1>
 
       {/* Filter Bar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          marginBottom: "1rem",
-          gap: "0.5rem",
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "1rem", gap: "0.5rem" }}>
         <FiFilter size={20} style={{ marginRight: "0.5rem" }} />
-        <select
-          value={batchFilter}
-          onChange={(e) => setBatchFilter(e.target.value)}
-          style={selectStyle}
-        >
+        <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)} style={selectStyle}>
           <option value="">All Batches</option>
           {uniqueBatches.map((batch) => (
-            <option key={batch} value={batch}>
-              {batch}
-            </option>
+            <option key={batch} value={batch}>{batch}</option>
           ))}
         </select>
-        <select
-          value={deptFilter}
-          onChange={(e) => setDeptFilter(e.target.value)}
-          style={selectStyle}
-        >
+        <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} style={selectStyle}>
           <option value="">All Departments</option>
           {uniqueDepts.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
+            <option key={dept} value={dept}>{dept}</option>
           ))}
         </select>
-        <select
-          value={hostelFilter}
-          onChange={(e) => setHostelFilter(e.target.value)}
-          style={selectStyle}
-        >
+        <select value={hostelFilter} onChange={(e) => setHostelFilter(e.target.value)} style={selectStyle}>
           <option value="">All Hostels</option>
           {uniqueHostels.map((hostel) => (
-            <option key={hostel} value={hostel}>
-              {hostel}
-            </option>
+            <option key={hostel} value={hostel}>{hostel}</option>
           ))}
         </select>
       </div>
 
-      {/* Student Table */}
+      {/* Students Table */}
       <table style={tableStyle}>
         <thead style={theadStyle}>
           <tr>
-            <th style={thStyle}>ID</th>
             <th style={thStyle}>Roll No</th>
             <th style={thStyle}>Full Name</th>
             <th style={thStyle}>Department</th>
@@ -112,7 +82,6 @@ export default function StudentRoomManagement() {
         <tbody>
           {filteredStudents.map((student) => (
             <tr key={student.student_id} style={trStyle}>
-              <td style={tdStyle}>{student.student_id}</td>
               <td style={tdStyle}>{student.roll_no}</td>
               <td style={tdStyle}>{student.full_name}</td>
               <td style={tdStyle}>{student.department}</td>
@@ -133,43 +102,10 @@ export default function StudentRoomManagement() {
 }
 
 // Inline Styles
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-};
-
-const theadStyle = {
-  backgroundColor: "#f0f0f0",
-};
-
-const thStyle = {
-  padding: "0.75rem",
-  textAlign: "left",
-  borderBottom: "2px solid #ccc",
-  fontWeight: "600",
-};
-
-const trStyle = {
-  borderBottom: "1px solid #ddd",
-};
-
-const tdStyle = {
-  padding: "0.75rem",
-};
-
-const buttonStyle = {
-  padding: "0.5rem 1rem",
-  backgroundColor: "#1c2f58",
-  color: "#fff",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-};
-
-const selectStyle = {
-  padding: "0.3rem",
-  border: "1px solid #ccc",
-  borderRadius: "4px",
-  backgroundColor: "#fff",
-};
+const tableStyle = { width: "100%", borderCollapse: "collapse", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" };
+const theadStyle = { backgroundColor: "#f0f0f0" };
+const thStyle = { padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ccc", fontWeight: "600" };
+const trStyle = { borderBottom: "1px solid #ddd" };
+const tdStyle = { padding: "0.75rem" };
+const buttonStyle = { padding: "0.5rem 1rem", backgroundColor: "#1c2f58", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" };
+const selectStyle = { padding: "0.3rem", border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "#fff" };
