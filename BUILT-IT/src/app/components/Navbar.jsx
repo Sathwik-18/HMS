@@ -1,24 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, UserButton } from "@clerk/nextjs";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   const { isSignedIn, user } = useUser();
+  const [dbRole, setDbRole] = useState(null);
+  const [loadingRole, setLoadingRole] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Determine user role from Clerk publicMetadata if available
-  const userRole = user?.publicMetadata?.role;
+  // When user info is loaded, fetch role from your API based on their email.
+  useEffect(() => {
+    async function fetchUserRole() {
+      if (isSignedIn && user) {
+        const email = user.primaryEmailAddress.emailAddress;
+        try {
+          const res = await fetch(`/api/user/role?email=${encodeURIComponent(email)}`);
+          const data = await res.json();
+          if (data.error) {
+            console.error("Error fetching role:", data.error);
+            setDbRole(null);
+          } else {
+            setDbRole(data.role);
+          }
+        } catch (err) {
+          console.error("Error fetching role:", err);
+          setDbRole(null);
+        } finally {
+          setLoadingRole(false);
+        }
+      } else {
+        setLoadingRole(false);
+      }
+    }
+    fetchUserRole();
+  }, [isSignedIn, user]);
 
-  // Set home link based on role: if student then /student, admin => /admin, guard => /guard; otherwise "/"
+  // Determine home link based on the DB role (fallback to Clerk meta if needed)
   const homeLink = isSignedIn
-    ? userRole === "student"
+    ? dbRole === "student"
       ? "/student"
-      : userRole === "admin"
+      : dbRole === "admin"
       ? "/admin"
-      : userRole === "guard"
+      : dbRole === "guard"
       ? "/guard"
       : "/"
     : "/";
@@ -39,17 +65,17 @@ export default function Navbar() {
           <li>
             <Link href={homeLink}>Home</Link>
           </li>
-          {isSignedIn && userRole === "student" && (
+          {isSignedIn && dbRole === "student" && (
             <li>
               <Link href="/student">Student</Link>
             </li>
           )}
-          {isSignedIn && userRole === "admin" && (
+          {isSignedIn && dbRole === "admin" && (
             <li>
               <Link href="/admin">Admin</Link>
             </li>
           )}
-          {isSignedIn && userRole === "guard" && (
+          {isSignedIn && dbRole === "guard" && (
             <li>
               <Link href="/guard">Guard</Link>
             </li>
