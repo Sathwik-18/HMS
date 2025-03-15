@@ -64,8 +64,8 @@
   }
   
   .instituteLogo {
-    margin-top: -7rem;
-    margin-left: 23rem;
+    margin-top: 50%;
+    margin-left: 50%;
     display: flex;
     justify-content: center;
   }

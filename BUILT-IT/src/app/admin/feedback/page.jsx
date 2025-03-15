@@ -96,7 +96,6 @@ export default function AdminFeedback() {
             <thead style={theadStyle}>
               <tr>
                 <th style={thStyle}>Feedback ID</th>
-                <th style={thStyle}>Student ID</th>
                 <th style={thStyle}>Feedback</th>
                 <th style={thStyle}>Infra Rating</th>
                 <th style={thStyle}>Technical Rating</th>
@@ -110,7 +109,6 @@ export default function AdminFeedback() {
               {feedbacks.map(fb => (
                 <tr key={fb.feedback_id} style={trStyle}>
                   <td style={tdStyle}>{fb.feedback_id}</td>
-                  <td style={tdStyle}>{fb.student_id}</td>
                   <td style={tdStyle}>{fb.feedback_text}</td>
                   <td style={tdStyle}>{fb.infra_rating}</td>
                   <td style={tdStyle}>{fb.technical_rating}</td>

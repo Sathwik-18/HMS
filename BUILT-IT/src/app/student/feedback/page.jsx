@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-// Helper: Compute the current week label (e.g. "Week 1", "Week 2", etc.)
 const getCurrentWeekLabel = () => {
   const now = new Date();
   const dayOfMonth = now.getDate();

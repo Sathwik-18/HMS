@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -8,7 +7,7 @@ export default function StudentComplaints() {
   const [student, setStudent] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [loadingComplaints, setLoadingComplaints] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   // Form state
   const [complaintType, setComplaintType] = useState("infrastructure");
@@ -23,21 +22,23 @@ export default function StudentComplaints() {
       setSession(session);
     }
     getSession();
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-    return () => authListener.subscription.unsubscribe();
+    return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Fetch student record once session is available
+  // Fetch student record using roll_no (derived from email)
   useEffect(() => {
     async function fetchStudent() {
       if (session && session.user) {
         const email = session.user.email;
         const rollNo = email.split("@")[0];
+        console.log("Fetched email:", email, "Computed rollNo:", rollNo);
         try {
           const res = await fetch(`/api/student?rollNo=${rollNo}`);
           const data = await res.json();
+          console.log("Student API response:", data);
           if (data.error) {
             setError(data.error);
           } else {
@@ -51,12 +52,12 @@ export default function StudentComplaints() {
     fetchStudent();
   }, [session]);
 
-  // Fetch complaints once student is loaded
+  // Fetch complaints using roll_no from student record
   useEffect(() => {
     async function fetchComplaints() {
       if (student) {
         try {
-          const res = await fetch(`/api/complaints?studentId=${student.student_id}`);
+          const res = await fetch(`/api/complaints?RollNo=${student.roll_no}`);
           const data = await res.json();
           if (data.error) {
             setError(data.error);
@@ -73,29 +74,6 @@ export default function StudentComplaints() {
     fetchComplaints();
   }, [student]);
 
-  // Real-time subscription for complaints changes (optional)
-  useEffect(() => {
-    if (!student) return;
-    // Subscribe to all changes in the "complaints" table for this student.
-    const channel = supabase
-      .channel('complaints-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'complaints', filter: `student_id=eq.${student.student_id}` },
-        payload => {
-          // When a change occurs, re-fetch complaints.
-          fetch(`/api/complaints?studentId=${student.student_id}`)
-            .then(res => res.json())
-            .then(data => setComplaints(data))
-            .catch(err => console.error("Realtime update error:", err));
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [student]);
-
   // Handle file input change: convert file to base64 string
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -105,7 +83,7 @@ export default function StudentComplaints() {
     }
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPhoto(reader.result); // base64 encoded string
+      setPhoto(reader.result);
     };
     reader.readAsDataURL(file);
   };
@@ -113,16 +91,19 @@ export default function StudentComplaints() {
   // Handle complaint form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!student) return;
+    if (!student) {
+      setUploadStatus("Student record not loaded.");
+      return;
+    }
     try {
       const res = await fetch("/api/complaints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentId: student.student_id,
+          RollNo: student.roll_no,
           type: complaintType,
           description,
-          photo, // optional base64 string
+          photo: photo || null,
         }),
       });
       const data = await res.json();
@@ -135,7 +116,7 @@ export default function StudentComplaints() {
         setDescription("");
         setPhoto(null);
         // Refresh complaints list
-        const res2 = await fetch(`/api/complaints?studentId=${student.student_id}`);
+        const res2 = await fetch(`/api/complaints?RollNo=${student.roll_no}`);
         const data2 = await res2.json();
         setComplaints(data2);
       }
@@ -145,8 +126,8 @@ export default function StudentComplaints() {
   };
 
   if (!session) return <div>Please sign in to view your complaints.</div>;
-  if (error) return <div style={{ color: "red", padding: "2rem" }}>Error: {error}</div>;
   if (!student) return <div>Loading student record...</div>;
+  if (error) return <div style={{ color: "red", padding: "2rem" }}>Error: {error}</div>;
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -161,7 +142,7 @@ export default function StudentComplaints() {
               Type:{" "}
               <select value={complaintType} onChange={(e) => setComplaintType(e.target.value)}>
                 <option value="infrastructure">Infrastructure</option>
-                <option value="infrastructure">Technical</option>
+                <option value="technical">Technical</option>
                 <option value="cleanliness">Cleanliness</option>
                 <option value="other">Other</option>
               </select>
@@ -200,24 +181,20 @@ export default function StudentComplaints() {
             {complaints.map((comp) => (
               <li key={comp.complaint_id} style={{ marginBottom: "1rem", borderBottom: "1px solid #ccc", paddingBottom: "1rem" }}>
                 <p>
-                  <strong>Type:</strong> {comp.type} | <strong>Status:</strong> {comp.status}
+                  <strong>ID:</strong> {comp.complaint_id} | <strong>Roll No:</strong> {comp.roll_no}
+                </p>
+                <p>
+                  <strong>Type:</strong> {comp.type}
                 </p>
                 <p>
                   <strong>Description:</strong> {comp.description}
                 </p>
-                {comp.photo_url && (
-                  <div>
-                    <strong>Photo:</strong>
-                    <br />
-                    <img src={comp.photo_url} alt="Complaint Photo" style={{ maxWidth: "200px" }} />
-                  </div>
-                )}
                 <p>
-                  <strong>Filed on:</strong> {new Date(comp.created_at).toLocaleString()}
+                  <strong>Status:</strong> {comp.status}
                 </p>
                 {comp.closed_at && (
                   <p>
-                    <strong>Closed at:</strong> {new Date(comp.closed_at).toLocaleString()}
+                    <strong>Closed At:</strong> {new Date(comp.closed_at).toLocaleString()}
                   </p>
                 )}
                 {comp.resolution_info && (
@@ -225,6 +202,9 @@ export default function StudentComplaints() {
                     <strong>Resolution Info:</strong> {comp.resolution_info}
                   </p>
                 )}
+                <p>
+                  <strong>Filed on:</strong> {new Date(comp.created_at).toLocaleString()}
+                </p>
               </li>
             ))}
           </ul>
