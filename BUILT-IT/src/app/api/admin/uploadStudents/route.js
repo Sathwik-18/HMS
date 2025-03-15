@@ -8,38 +8,48 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "CSV data missing" }, { status: 400 });
     }
 
-    // Split CSV into lines and ignore empty lines.
+    // Split CSV into lines, ignoring empty lines.
     const lines = csv.split("\n").filter((line) => line.trim() !== "");
     if (lines.length < 2) {
       return NextResponse.json({ success: false, error: "CSV must have at least one data row" }, { status: 400 });
     }
 
-    // Get header and expected fields (now with email as the 9th column).
+    // Expected header fields (order matters):
     const header = lines[0].split(",").map((h) => h.trim());
-    const expected = ["roll_no", "full_name", "department", "batch", "room_number", "hostel_block", "fees_paid", "emergency_contact", "email"];
+    const expected = [
+      "roll_no",
+      "full_name",
+      "department",
+      "batch",
+      "room_number",
+      "hostel_block",
+      "fees_paid",
+      "emergency_contact",
+      "email"
+    ];
+
+    // (Optional) You can validate the header against expected here.
 
     let errors = [];
     let successCount = 0;
-    // Process each row starting from index 1 (skip header)
+    
+    // Process each data row (starting from index 1)
     for (let i = 1; i < lines.length; i++) {
       const row = lines[i].split(",").map((cell) => cell.trim());
       if (row.length < expected.length) {
         errors.push(`Row ${i + 1}: Incomplete data.`);
         continue;
       }
-      const [
-        roll_no,
-        full_name,
-        department,
-        batch,
-        room_number,
-        hostel_block,
-        fees_paid,
-        emergency_contact,
-        email,
-      ] = row;
+      const [roll_no, full_name, department, batch, room_number, hostel_block, fees_paid, emergency_contact, email] = row;
+
+      // Verify required fields: roll_no, full_name, department, batch, hostel_block, fees_paid, email.
+      if (!roll_no || !full_name || !department || !batch || !hostel_block || fees_paid === "" || !email) {
+        errors.push(`Row ${i + 1}: Missing required fields.`);
+        continue;
+      }
 
       try {
+        // Insert/update into students table
         await query(
           `INSERT INTO students (roll_no, full_name, department, batch, room_number, hostel_block, fees_paid, emergency_contact, email)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -63,6 +73,15 @@ export async function POST(request) {
             emergency_contact === "" ? null : emergency_contact,
             email === "" ? null : email,
           ]
+        );
+
+        // Insert/update into app_users table with role as "student"
+        await query(
+          `INSERT INTO app_users (email, role)
+           VALUES ($1, $2)
+           ON CONFLICT (email) DO UPDATE 
+             SET role = EXCLUDED.role;`,
+          [email, "student"]
         );
         successCount++;
       } catch (err) {

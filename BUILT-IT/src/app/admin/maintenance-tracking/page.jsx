@@ -114,7 +114,7 @@ export default function MaintenanceTracking() {
           <thead style={theadStyle}>
             <tr>
               <th style={thStyle}>ID</th>
-              <th style={thStyle}>Student ID</th>
+              <th style={thStyle}>Roll No</th>
               <th style={thStyle}>Description</th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Closed At</th>
@@ -127,7 +127,7 @@ export default function MaintenanceTracking() {
             {complaints.map((complaint) => (
               <tr key={complaint.complaint_id} style={trStyle}>
                 <td style={tdStyle}>{complaint.complaint_id}</td>
-                <td style={tdStyle}>{complaint.student_id}</td>
+                <td style={tdStyle}>{complaint.roll_no}</td>
                 <td style={tdStyle}>{complaint.description}</td>
                 <td style={tdStyle}>{complaint.status}</td>
                 <td style={tdStyle}>
