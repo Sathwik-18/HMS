@@ -12,6 +12,7 @@ export default function Navbar() {
   const [role, setRole] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [homePath, setHomePath] = useState("/"); // New state variable for home redirection
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +21,6 @@ export default function Navbar() {
       setSession(session);
       if (session) {
         setUserData(session.user);
-        // Fetch role from your custom API using email
         const email = session.user.email;
         try {
           const res = await fetch(`/api/user/role?email=${encodeURIComponent(email)}`);
@@ -28,12 +28,18 @@ export default function Navbar() {
           if (data.error) {
             console.error("Error fetching role:", data.error);
             setRole(null);
+            setHomePath("/");
           } else {
             setRole(data.role);
+            if (data.role === "admin") setHomePath("/admin");
+            else if (data.role === "student") setHomePath("/student");
+            else if (data.role === "guard") setHomePath("/guard");
+            else setHomePath("/");
           }
         } catch (err) {
           console.error("Error fetching role:", err);
           setRole(null);
+          setHomePath("/");
         }
       }
     }
@@ -50,16 +56,23 @@ export default function Navbar() {
             if (data.error) {
               console.error("Error fetching role:", data.error);
               setRole(null);
+              setHomePath("/");
             } else {
               setRole(data.role);
+              if (data.role === "admin") setHomePath("/admin");
+              else if (data.role === "student") setHomePath("/student");
+              else if (data.role === "guard") setHomePath("/guard");
+              else setHomePath("/");
             }
           })
           .catch((err) => {
             console.error("Error fetching role:", err);
             setRole(null);
+            setHomePath("/");
           });
       } else {
         setRole(null);
+        setHomePath("/");
       }
     });
     return () => {
@@ -67,9 +80,15 @@ export default function Navbar() {
     };
   }, []);
 
+  // Redirect user based on role
+  useEffect(() => {
+    if (role) {
+      router.push(homePath);
+    }
+  }, [role, homePath, router]);
+
   // Render links based on role
   const renderLinks = () => {
-    // If not signed in, show only Sign In.
     if (!session) {
       return (
         <li>
@@ -118,7 +137,7 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       {/* Left Side: Logo & Brand */}
       <div className={styles.navbarLeft}>
-        <Link href={session ? "/" : "/"} className={styles.logoLink}>
+        <Link href={homePath} className={styles.logoLink}>
           <img src="/logo.png" alt="IIT Indore Logo" className={styles.logo} />
           <span className={styles.brandName}>HMS - IIT Indore</span>
         </Link>

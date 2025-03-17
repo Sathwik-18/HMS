@@ -2,11 +2,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiFilter } from "react-icons/fi";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function StudentsData() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter states
   const [batchFilter, setBatchFilter] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
   const [hostelFilter, setHostelFilter] = useState("");
@@ -26,6 +29,7 @@ export default function StudentsData() {
     fetchStudents();
   }, []);
 
+  // Compute filtered students based on current filter selections
   const filteredStudents = students.filter((student) => {
     const batchMatch = batchFilter ? student.batch.toString() === batchFilter : true;
     const deptMatch = deptFilter ? student.department === deptFilter : true;
@@ -33,9 +37,40 @@ export default function StudentsData() {
     return batchMatch && deptMatch && hostelMatch;
   });
 
+  // Unique values for filters
   const uniqueBatches = Array.from(new Set(students.map((s) => s.batch))).sort();
   const uniqueDepts = Array.from(new Set(students.map((s) => s.department)));
   const uniqueHostels = Array.from(new Set(students.map((s) => s.hostel_block))).filter(Boolean);
+
+  // Function to generate and download PDF using jsPDF and autoTable
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Students Data", 14, 22);
+
+    const tableColumn = ["Roll No", "Full Name", "Department", "Batch", "Room Number", "Hostel Block"];
+    const tableRows = [];
+
+    filteredStudents.forEach((student) => {
+      const studentData = [
+        student.roll_no,
+        student.full_name,
+        student.department,
+        student.batch,
+        student.room_number || "-",
+        student.hostel_block || "-",
+      ];
+      tableRows.push(studentData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+    });
+
+    doc.save("students_data.pdf");
+  };
 
   if (loading) return <div>Loading students...</div>;
 
@@ -49,22 +84,44 @@ export default function StudentsData() {
         <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)} style={selectStyle}>
           <option value="">All Batches</option>
           {uniqueBatches.map((batch) => (
-            <option key={batch} value={batch}>{batch}</option>
+            <option key={batch} value={batch}>
+              {batch}
+            </option>
           ))}
         </select>
         <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} style={selectStyle}>
           <option value="">All Departments</option>
           {uniqueDepts.map((dept) => (
-            <option key={dept} value={dept}>{dept}</option>
+            <option key={dept} value={dept}>
+              {dept}
+            </option>
           ))}
         </select>
         <select value={hostelFilter} onChange={(e) => setHostelFilter(e.target.value)} style={selectStyle}>
           <option value="">All Hostels</option>
           {uniqueHostels.map((hostel) => (
-            <option key={hostel} value={hostel}>{hostel}</option>
+            <option key={hostel} value={hostel}>
+              {hostel}
+            </option>
           ))}
         </select>
       </div>
+      
+      {/* Download Button */}
+      <button
+        onClick={downloadPDF}
+        style={{
+          marginBottom: "1rem",
+          padding: "0.5rem 1rem",
+          backgroundColor: "#1c2f58",
+          color: "#fff",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+        }}
+      >
+        Download Data PDF
+      </button>
 
       {/* Students Table */}
       <table style={tableStyle}>
@@ -109,3 +166,4 @@ const trStyle = { borderBottom: "1px solid #ddd" };
 const tdStyle = { padding: "0.75rem" };
 const buttonStyle = { padding: "0.5rem 1rem", backgroundColor: "#1c2f58", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" };
 const selectStyle = { padding: "0.3rem", border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "#fff" };
+ 
