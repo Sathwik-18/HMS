@@ -11,8 +11,9 @@ export default function NotificationManagement() {
   // Filters for recipients
   const [batchFilter, setBatchFilter] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
+  const [hostelFilter, setHostelFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRecipients, setSelectedRecipients] = useState([]); // will store email addresses
+  const [selectedRecipients, setSelectedRecipients] = useState([]); // email addresses
   
   // Email form state
   const [subject, setSubject] = useState("");
@@ -27,7 +28,6 @@ export default function NotificationManagement() {
       try {
         const res = await fetch("/api/admin/students");
         const data = await res.json();
-        // Ensure data is an array; if not, wrap it in one.
         setStudents(Array.isArray(data) ? data : [data]);
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -39,7 +39,7 @@ export default function NotificationManagement() {
     
     async function fetchNotificationsHistory() {
       try {
-        const res = await fetch("/api/admin/notifications");
+        const res = await fetch("/api/notifications");
         const data = await res.json();
         setNotificationsHistory(data);
       } catch (error) {
@@ -58,15 +58,18 @@ export default function NotificationManagement() {
     if (deptFilter) {
       filtered = filtered.filter(s => s.department === deptFilter);
     }
+    if (hostelFilter) {
+      filtered = filtered.filter(s => s.hostel_block === hostelFilter);
+    }
     if (searchQuery) {
       filtered = filtered.filter(s => s.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     setFilteredStudents(filtered);
-  }, [students, batchFilter, deptFilter, searchQuery]);
+  }, [students, batchFilter, deptFilter, hostelFilter, searchQuery]);
   
-  // Unique values for filter options
   const uniqueBatches = Array.from(new Set(students.map(s => s.batch))).sort();
   const uniqueDepts = Array.from(new Set(students.map(s => s.department)));
+  const uniqueHostels = Array.from(new Set(students.map(s => s.hostel_block))).filter(Boolean);
   
   // Toggle recipient selection
   const toggleRecipient = (email) => {
@@ -77,7 +80,7 @@ export default function NotificationManagement() {
     }
   };
   
-  // Handle sending notification
+  // Handle sending notification using Nodemailer via our API
   const handleSendNotification = async (e) => {
     e.preventDefault();
     if (!subject || !message || selectedRecipients.length === 0) {
@@ -85,7 +88,7 @@ export default function NotificationManagement() {
       return;
     }
     try {
-      const res = await fetch("/api/admin/notifications", {
+      const res = await fetch("/api/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,7 +104,7 @@ export default function NotificationManagement() {
         setMessage("");
         setSelectedRecipients([]);
         // Refresh notifications history
-        const res2 = await fetch("/api/admin/notifications");
+        const res2 = await fetch("/api/notifications");
         const data2 = await res2.json();
         setNotificationsHistory(data2);
       } else {
@@ -132,6 +135,12 @@ export default function NotificationManagement() {
           <option value="">All Departments</option>
           {uniqueDepts.map(dept => (
             <option key={dept} value={dept}>{dept}</option>
+          ))}
+        </select>
+        <select value={hostelFilter} onChange={(e) => setHostelFilter(e.target.value)} style={selectStyle}>
+          <option value="">All Hostels</option>
+          {uniqueHostels.map(hostel => (
+            <option key={hostel} value={hostel}>{hostel}</option>
           ))}
         </select>
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -180,7 +189,7 @@ export default function NotificationManagement() {
         </tbody>
       </table>
       
-      {/* Debug: Display selected recipients */}
+      {/* Display Selected Recipients */}
       <div style={{ marginBottom: "1rem" }}>
         <strong>Selected Recipients:</strong> {selectedRecipients.join(", ")}
       </div>

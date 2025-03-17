@@ -1,7 +1,7 @@
-import { query } from "../../../../lib/db";
+import nodemailer from "nodemailer";
+import { query } from "../../../lib/db";
 import { NextResponse } from "next/server";
 
-// GET: Return all sent notifications ordered by sent time (newest first)
 export async function GET(request) {
   try {
     const result = await query("SELECT * FROM notifications ORDER BY sent_at DESC");
@@ -12,18 +12,33 @@ export async function GET(request) {
   }
 }
 
-// POST: Send a notification (simulate email sending) and store history
 export async function POST(request) {
   try {
     const { subject, message, recipients } = await request.json();
     if (!subject || !message || !recipients || recipients.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-    // For demonstration, simulate sending an email.
-    console.log("Sending email with subject:", subject);
-    console.log("To recipients:", recipients);
-    // In production, integrate nodemailer/SendGrid/etc.
-    const recipientsStr = Array.isArray(recipients) ? recipients.join(", ") : recipients;
+    // Create a transporter using nodemailer. Ensure you have defined NOTIFICATION_EMAIL and NOTIFICATION_EMAIL_PASS in your .env.local.
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NOTIFICATION_EMAIL, 
+        pass: process.env.NOTIFICATION_EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.NOTIFICATION_EMAIL,
+      to: recipients.join(", "),
+      subject,
+      text: message,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully!");
+
+    // Insert notification record in the database
+    const recipientsStr = recipients.join(", ");
     const result = await query(
       "INSERT INTO notifications (subject, message, recipients) VALUES ($1, $2, $3) RETURNING *",
       [subject, message, recipientsStr]
