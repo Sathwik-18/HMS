@@ -13,21 +13,20 @@ export default function RoomChangeRequest() {
   const [isAvailable, setIsAvailable] = useState(null);
   const [statusMsg, setStatusMsg] = useState("");
 
-  // Get Supabase session on mount and subscribe to auth changes.
+  // Get session using Supabase auth
   useEffect(() => {
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
     }
     getSession();
-
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Fetch student record using roll number derived from email once session is available.
+  // Fetch student record using roll_no (derived from email)
   useEffect(() => {
     async function fetchStudent() {
       if (session && session.user) {
@@ -50,7 +49,7 @@ export default function RoomChangeRequest() {
     fetchStudent();
   }, [session]);
 
-  // Check if the preferred room is available.
+  // Check room availability (now includes hostel)
   const handleCheckAvailability = async () => {
     if (!preferredRoom) {
       setAvailabilityMsg("Please enter a preferred room.");
@@ -58,7 +57,9 @@ export default function RoomChangeRequest() {
       return;
     }
     try {
-      const res = await fetch(`/api/student/checkRoomAvailability?room=${preferredRoom}&hostel=${student.hostel_block}`);
+      const res = await fetch(
+        `/api/student/checkRoomAvailability?room=${preferredRoom}&hostel=${student.hostel_block}`
+      );
       const data = await res.json();
       if (data.error) {
         setAvailabilityMsg("Error: " + data.error);
@@ -76,10 +77,9 @@ export default function RoomChangeRequest() {
     }
   };
 
-  // Handle complaint (room change request) submission.
+  // Handle room change request submission – note the added hostel_block field.
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Block submission if room is not available.
     if (isAvailable === false) {
       setStatusMsg("Cannot submit request: The preferred room is already occupied.");
       return;
@@ -99,6 +99,7 @@ export default function RoomChangeRequest() {
           current_room: currentRoom,
           preferred_room: preferredRoom,
           reason: reason,
+          hostel_block: student.hostel_block // send the student's hostel info
         }),
       });
       const data = await res.json();

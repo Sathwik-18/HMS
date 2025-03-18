@@ -103,7 +103,7 @@ export default function Navbar() {
           <li><Link href="/admin/students-data">Students Data</Link></li>
           <li><Link href="/admin/spreadsheet-integration">Upload Data</Link></li>
           <li><Link href="/admin/maintenance-tracking">Maintenance</Link></li>
-          <li><Link href="/admin/analytics-dashboard">Analytics</Link></li>
+          <li><Link href="/admin/room-request-tracking">Room Requests</Link></li>
           <li><Link href="/admin/notification-management">Notifications</Link></li>
           <li><Link href="/admin/feedback">Feedbacks</Link></li>
         </>

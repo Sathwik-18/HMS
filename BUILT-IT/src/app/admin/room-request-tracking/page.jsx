@@ -11,13 +11,13 @@ import {
   Legend,
 } from "chart.js";
 
-// Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function RoomRequestTracking() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [selectedHostel, setSelectedHostel] = useState("");
+
   // For editing a request
   const [editingRequest, setEditingRequest] = useState(null);
   const [newStatus, setNewStatus] = useState("");
@@ -37,6 +37,16 @@ export default function RoomRequestTracking() {
     fetchRequests();
   }, []);
 
+  // Filter requests based on selected hostel
+  const filteredRequests = selectedHostel
+    ? requests.filter((req) => req.hostel_block === selectedHostel)
+    : requests;
+
+  // Get unique hostel values from requests
+  const uniqueHostels = Array.from(
+    new Set(requests.map((req) => req.hostel_block).filter(Boolean))
+  );
+
   const handleEditClick = (request) => {
     setEditingRequest(request);
     setNewStatus(request.status);
@@ -45,7 +55,6 @@ export default function RoomRequestTracking() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editingRequest) return;
-    // Set closedAt if status is "approved" or "rejected"
     const closedAt =
       newStatus === "approved" || newStatus === "rejected"
         ? new Date().toISOString()
@@ -55,7 +64,7 @@ export default function RoomRequestTracking() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          request_id: editingRequest.request_id, // use request_id instead of complaint_id
+          request_id: editingRequest.request_id,
           status: newStatus,
           closed_at: closedAt,
         }),
@@ -77,11 +86,9 @@ export default function RoomRequestTracking() {
       console.error("Error updating room change request:", error);
     }
   };
-  
-  
 
-  // Compute summary for bar chart
-  const summary = requests.reduce((acc, req) => {
+  // Compute summary for chart (filtered requests)
+  const summary = filteredRequests.reduce((acc, req) => {
     if (req.status === "pending") acc.pending++;
     else if (req.status === "approved") acc.approved++;
     else if (req.status === "rejected") acc.rejected++;
@@ -106,14 +113,32 @@ export default function RoomRequestTracking() {
     <div style={{ padding: "2rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
       <div style={{ width: "80%" }}>
         <h1>Room Request Tracking</h1>
+        {/* Hostel Filter Dropdown */}
+        <div style={{ marginBottom: "1rem" }}>
+          <label>
+            Select Hostel:{" "}
+            <select
+              value={selectedHostel}
+              onChange={(e) => setSelectedHostel(e.target.value)}
+              style={{ padding: "0.5rem" }}
+            >
+              <option value="">All Hostels</option>
+              {uniqueHostels.map((hostel) => (
+                <option key={hostel} value={hostel}>
+                  {hostel}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <table style={tableStyle}>
           <thead style={theadStyle}>
             <tr>
-              <th style={thStyle}>Request ID</th>
               <th style={thStyle}>Roll No</th>
               <th style={thStyle}>Full Name</th>
               <th style={thStyle}>Current Room</th>
               <th style={thStyle}>Preferred Room</th>
+              <th style={thStyle}>Hostel</th>
               <th style={thStyle}>Reason</th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Raised At</th>
@@ -122,19 +147,21 @@ export default function RoomRequestTracking() {
             </tr>
           </thead>
           <tbody>
-            {requests.map((req) => (
+            {filteredRequests.map((req) => (
               <tr key={req.request_id} style={trStyle}>
-                <td style={tdStyle}>{req.request_id}</td>
                 <td style={tdStyle}>{req.roll_no}</td>
                 <td style={tdStyle}>{req.full_name}</td>
                 <td style={tdStyle}>{req.current_room || "-"}</td>
                 <td style={tdStyle}>{req.preferred_room || "-"}</td>
+                <td style={tdStyle}>{req.hostel_block}</td>
                 <td style={tdStyle}>{req.reason || "-"}</td>
                 <td style={tdStyle}>{req.status}</td>
                 <td style={tdStyle}>{new Date(req.raised_at).toLocaleString()}</td>
                 <td style={tdStyle}>{req.closed_at ? new Date(req.closed_at).toLocaleString() : "-"}</td>
                 <td style={tdStyle}>
-                  <button onClick={() => handleEditClick(req)} style={buttonStyle}>Edit</button>
+                  <button onClick={() => handleEditClick(req)} style={buttonStyle}>
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))}
@@ -179,8 +206,7 @@ export default function RoomRequestTracking() {
   );
 }
 
-// Inline Styles
-const tableStyle = { width: "100%", borderCollapse: "collapse", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" };
+const tableStyle = { width: "100%", borderCollapse: "collapse", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", marginBottom: "2rem" };
 const theadStyle = { backgroundColor: "#f0f0f0" };
 const thStyle = { padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ccc", fontWeight: "600" };
 const trStyle = { borderBottom: "1px solid #ddd" };
