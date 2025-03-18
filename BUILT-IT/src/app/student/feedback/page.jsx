@@ -29,21 +29,18 @@ export default function StudentFeedback() {
   // All feedbacks for this student
   const [allFeedbacks, setAllFeedbacks] = useState([]);
 
-  // Get session using Supabase auth
   useEffect(() => {
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
     }
     getSession();
-
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Fetch student record once session is available
   useEffect(() => {
     async function fetchStudent() {
       if (session && session.user) {
@@ -52,7 +49,6 @@ export default function StudentFeedback() {
         try {
           const res = await fetch(`/api/student?rollNo=${rollNo}`);
           const data = await res.json();
-          console.log("API response:", data);
           if (data.error) {
             setError(data.error);
           } else {
@@ -63,11 +59,9 @@ export default function StudentFeedback() {
         }
       }
     }
-    
     fetchStudent();
   }, [session]);
 
-  // Check if feedback exists for the current week (to prevent duplicate submissions)
   useEffect(() => {
     async function checkFeedback() {
       if (student) {
@@ -90,7 +84,6 @@ export default function StudentFeedback() {
     checkFeedback();
   }, [student]);
 
-  // Fetch all previous feedbacks for this student
   useEffect(() => {
     async function fetchAllFeedbacks() {
       if (student) {
@@ -111,7 +104,6 @@ export default function StudentFeedback() {
     fetchAllFeedbacks();
   }, [student, statusMsg]);
   
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!student) {
@@ -131,6 +123,7 @@ export default function StudentFeedback() {
           cleanliness_rating: parseFloat(cleanRating),
           overall_rating: parseFloat(overallRating),
           feedback_week: weekLabel,
+          hostel_block: student.hostel_block, // send student's hostel_block
         }),
       });
       const data = await res.json();
@@ -138,14 +131,12 @@ export default function StudentFeedback() {
         setStatusMsg("Error: " + data.error);
       } else {
         setStatusMsg("Feedback submitted successfully!");
-        // Clear form fields
         setFeedbackText("");
         setInfraRating("");
         setTechRating("");
         setCleanRating("");
         setOverallRating("");
         setFeedbackSubmitted(true);
-        // Refresh all feedbacks
         const res2 = await fetch(`/api/student/feedback/all?studentId=${student.student_id}`);
         const data2 = await res2.json();
         setAllFeedbacks(data2);
@@ -263,6 +254,7 @@ export default function StudentFeedback() {
               <th style={{ padding: "0.5rem", border: "1px solid #ccc" }}>Technical Rating</th>
               <th style={{ padding: "0.5rem", border: "1px solid #ccc" }}>Clean Rating</th>
               <th style={{ padding: "0.5rem", border: "1px solid #ccc" }}>Overall Rating</th>
+              <th style={{ padding: "0.5rem", border: "1px solid #ccc" }}>Hostel</th>
               <th style={{ padding: "0.5rem", border: "1px solid #ccc" }}>Submitted On</th>
             </tr>
           </thead>
@@ -275,6 +267,7 @@ export default function StudentFeedback() {
                 <td style={{ padding: "0.5rem", border: "1px solid #ccc" }}>{fb.technical_rating}</td>
                 <td style={{ padding: "0.5rem", border: "1px solid #ccc" }}>{fb.cleanliness_rating}</td>
                 <td style={{ padding: "0.5rem", border: "1px solid #ccc" }}>{fb.overall_rating}</td>
+                <td style={{ padding: "0.5rem", border: "1px solid #ccc" }}>{fb.hostel_block}</td>
                 <td style={{ padding: "0.5rem", border: "1px solid #ccc" }}>{new Date(fb.created_at).toLocaleString()}</td>
               </tr>
             ))}

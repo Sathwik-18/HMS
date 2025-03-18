@@ -57,7 +57,7 @@
     gap: 1.5rem;
     width: 90%; /* Adjust width as needed */
     max-width: 1200px;
-    /* You can add a min-height here if needed, but the cards will define the height */
+    margin-bottom: 60px;
   }
   
   .card {

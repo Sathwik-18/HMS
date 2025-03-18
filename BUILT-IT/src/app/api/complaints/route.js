@@ -20,18 +20,18 @@ export async function GET(request) {
   }
 }
 
-// POST: File a new complaint
+// POST: File a new complaint (now including hostel_block and room_number)
 export async function POST(request) {
   try {
-    const { RollNo, type, description, photo } = await request.json();
-    if (!RollNo || !type || !description) {
+    const { RollNo, type, description, photo, hostel_block, room_number } = await request.json();
+    if (!RollNo || !type || !description || !hostel_block || !room_number) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
     const result = await query(
-      `INSERT INTO complaints (roll_no, type, description, photo_url)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO complaints (roll_no, type, description, photo_url, hostel_block, room_number)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [RollNo, type, description, photo || null]
+      [RollNo, type, description, photo || null, hostel_block, room_number]
     );
     return NextResponse.json({ success: true, complaint: result.rows[0] });
   } catch (error) {

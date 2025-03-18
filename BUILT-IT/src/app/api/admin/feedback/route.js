@@ -3,7 +3,16 @@ import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
-    const result = await query("SELECT * FROM feedbacks ORDER BY feedback_week ASC, created_at DESC");
+    const { searchParams } = new URL(request.url);
+    const hostel = searchParams.get("hostel");
+    let sql = "SELECT * FROM feedbacks";
+    let params = [];
+    if (hostel) {
+      sql += " WHERE hostel_block = $1";
+      params.push(hostel);
+    }
+    sql += " ORDER BY feedback_week DESC, created_at DESC";
+    const result = await query(sql, params);
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error("Error fetching feedbacks:", error);

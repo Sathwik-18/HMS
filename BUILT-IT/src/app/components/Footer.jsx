@@ -3,10 +3,19 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './Footer.module.css';
+import { FaYoutube, FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa6';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+
+  const socialLinks = [
+    { icon: <FaYoutube />, url: 'www.youtube.com/channel/UCRnqhv7p9bU1B2eHO7IFfPw/videos', alt: 'YouTube' },
+    { icon: <FaFacebook />, url: 'https://www.facebook.com/profile.php?id=100064798209779', alt: 'Facebook' },
+    { icon: <FaTwitter />, url: 'https://x.com/iitiofficial?lang=en', alt: 'X' },
+    { icon: <FaInstagram />, url: 'https://www.instagram.com/iitindoreofficial/', alt: 'Instagram' },
+    { icon: <FaLinkedin />, url: 'https://www.linkedin.com/school/iit-indore/', alt: 'LinkedIn' },
+  ];
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContent}>
@@ -46,24 +55,37 @@ const Footer = () => {
             <li><Link href="https://ido.iiti.ac.in/">Infrastructure Development Office</Link></li>
             <li><Link href="https://www.iiti.ac.in/">IIT Indore Home</Link></li>
           </ul>
-          
+
           <div className={styles.instituteLogo}>
-            <Image 
-              src="/logo.png" 
-              alt="IIT Indore Logo" 
-              width={120} 
-              height={120}
+            <Image
+              src="/logo.png"
+              alt="IIT Indore Logo"
+              width={80} // Adjusted size
+              height={80} // Adjusted size
+              style={{ objectFit: 'contain' }} // Ensure it fits within the container
             />
           </div>
         </div>
+
+        <div className={styles.footerColumn}>
+          <h3>Follow Us</h3>
+          <div className={styles.socialLinks}>
+            {socialLinks.map((social, index) => (
+              <Link key={index} href={social.url} target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
+                {social.icon}
+                <span className={styles.srOnly}>{social.alt}</span> {/* For accessibility */}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
-      
+
       <div className={styles.footerBottom}>
         <div className={styles.addressInfo}>
           <p>Indian Institute of Technology Indore</p>
           <p>Khandwa Road, Simrol, Indore, India - 453552</p>
         </div>
-        
+
         <div className={styles.copyright}>
           <p>© {currentYear} Indian Institute of Technology Indore</p>
           <div className={styles.bottomLinks}>
@@ -72,7 +94,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
-      
+
       <div className={styles.scrollToTop}>
         <a href="#top" aria-label="Scroll to top">↑</a>
       </div>

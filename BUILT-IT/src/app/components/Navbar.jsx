@@ -112,6 +112,7 @@ export default function Navbar() {
       return (
         <>
           <li><Link href="/student">Home</Link></li>
+          <li><Link href="/student/profile">Profile</Link></li>
           <li><Link href="/student/complaints">Complaints</Link></li>
           <li><Link href="/student/room-change-request">Room Change</Link></li>
           <li><Link href="/student/feedback">Feedback</Link></li>

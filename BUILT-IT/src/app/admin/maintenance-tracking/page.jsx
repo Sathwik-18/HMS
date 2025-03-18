@@ -18,7 +18,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 export default function MaintenanceTracking() {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [selectedHostel, setSelectedHostel] = useState(""); // New state for hostel selection
+
   // For editing a complaint
   const [editingComplaint, setEditingComplaint] = useState(null);
   const [newStatus, setNewStatus] = useState("");
@@ -39,18 +40,53 @@ export default function MaintenanceTracking() {
     fetchComplaints();
   }, []);
 
-  // Begin editing a complaint
+  // Handler for dropdown change
+  const handleHostelChange = (e) => {
+    setSelectedHostel(e.target.value);
+  };
+
+  // Filter complaints based on selected hostel (if any)
+  const filteredComplaints = selectedHostel
+    ? complaints.filter((comp) => comp.hostel_block === selectedHostel)
+    : complaints;
+
+  // Compute summary counts for bar graph from filtered complaints
+  const summary = filteredComplaints.reduce(
+    (acc, comp) => {
+      if (comp.status === "pending") acc.pending++;
+      else if (comp.status === "in progress") acc.inProgress++;
+      else if (comp.status === "completed") acc.completed++;
+      return acc;
+    },
+    { pending: 0, inProgress: 0, completed: 0 }
+  );
+
+  const chartData = {
+    labels: ["Pending", "In Progress", "Completed"],
+    datasets: [
+      {
+        label: "Complaints",
+        data: [summary.pending, summary.inProgress, summary.completed],
+        backgroundColor: ["#FFCE56", "#36A2EB", "#4BC0C0"],
+      },
+    ],
+  };
+
+  // Compute unique hostels from the complaints data (if available)
+  const uniqueHostels = Array.from(
+    new Set(complaints.map((comp) => comp.hostel_block).filter(Boolean))
+  );
+
+  // Edit complaint handler remains unchanged
   const handleEditClick = (complaint) => {
     setEditingComplaint(complaint);
     setNewStatus(complaint.status);
     setResolutionMessage(complaint.resolution_info || "");
   };
 
-  // Submit updated complaint data
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!editingComplaint) return;
-    // Set closed_at if status is changed to "completed"
     const closedAt = newStatus === "completed" ? new Date().toISOString() : null;
     try {
       const res = await fetch("/api/admin/updateComplaint", {
@@ -81,39 +117,30 @@ export default function MaintenanceTracking() {
     }
   };
 
-  // Compute summary counts for bar graph
-  const summary = complaints.reduce(
-    (acc, comp) => {
-      if (comp.status === "pending") acc.pending++;
-      else if (comp.status === "in progress") acc.inProgress++;
-      else if (comp.status === "completed") acc.completed++;
-      return acc;
-    },
-    { pending: 0, inProgress: 0, completed: 0 }
-  );
-
-  const chartData = {
-    labels: ["Pending", "In Progress", "Completed"],
-    datasets: [
-      {
-        label: "Complaints",
-        data: [summary.pending, summary.inProgress, summary.completed],
-        backgroundColor: ["#FFCE56", "#36A2EB", "#4BC0C0"],
-      },
-    ],
-  };
-
   if (loading) return <div>Loading maintenance tasks...</div>;
 
   return (
     <div style={{ padding: "2rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-      
+      {/* Left Column: Table and Dropdown */}
       <div style={{ width: "80%" }}>
         <h1>Maintenance & Infrastructure Tracking</h1>
+        {/* Dropdown to select hostel */}
+        <div style={{ marginBottom: "1rem" }}>
+          <label>
+            Select Hostel:{" "}
+            <select value={selectedHostel} onChange={handleHostelChange} style={{ padding: "0.5rem" }}>
+              <option value="">All Hostels</option>
+              {uniqueHostels.map((hostel) => (
+                <option key={hostel} value={hostel}>
+                  {hostel}
+                </option>
+              ))}
+            </select> 
+          </label>
+        </div>
         <table style={tableStyle}>
           <thead style={theadStyle}>
             <tr>
-              <th style={thStyle}>ID</th>
               <th style={thStyle}>Roll No</th>
               <th style={thStyle}>Description</th>
               <th style={thStyle}>Status</th>
@@ -124,23 +151,16 @@ export default function MaintenanceTracking() {
             </tr>
           </thead>
           <tbody>
-            {complaints.map((complaint) => (
+            {filteredComplaints.map((complaint) => (
               <tr key={complaint.complaint_id} style={trStyle}>
-                <td style={tdStyle}>{complaint.complaint_id}</td>
                 <td style={tdStyle}>{complaint.roll_no}</td>
                 <td style={tdStyle}>{complaint.description}</td>
                 <td style={tdStyle}>{complaint.status}</td>
                 <td style={tdStyle}>
-                  {complaint.closed_at
-                    ? new Date(complaint.closed_at).toLocaleString()
-                    : "-"}
+                  {complaint.closed_at ? new Date(complaint.closed_at).toLocaleString() : "-"}
                 </td>
-                <td style={tdStyle}>
-                  {complaint.resolution_info ? complaint.resolution_info : "-"}
-                </td>
-                <td style={tdStyle}>
-                  {new Date(complaint.created_at).toLocaleString()}
-                </td>
+                <td style={tdStyle}>{complaint.resolution_info ? complaint.resolution_info : "-"}</td>
+                <td style={tdStyle}>{new Date(complaint.created_at).toLocaleString()}</td>
                 <td style={tdStyle}>
                   <button onClick={() => handleEditClick(complaint)} style={buttonStyle}>
                     Edit
@@ -188,6 +208,7 @@ export default function MaintenanceTracking() {
         )}
       </div>
 
+      {/* Right Column: Graph Overview */}
       <div style={{ width: "10%", minWidth: "200px" }}>
         <h2>Complaints Overview</h2>
         <div style={{ height: "300px" }}>
