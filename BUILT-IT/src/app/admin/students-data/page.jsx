@@ -1,13 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiFilter } from "react-icons/fi";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { 
+  FileDownIcon, 
+  FilterIcon, 
+  SearchIcon, 
+  UserIcon, 
+  BookOpenIcon, 
+  HomeIcon, 
+  CalendarIcon 
+} from "lucide-react";
 
 export default function StudentsData() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter states
   const [batchFilter, setBatchFilter] = useState("");
@@ -29,12 +38,16 @@ export default function StudentsData() {
     fetchStudents();
   }, []);
 
-  // Compute filtered students based on current filter selections
+  // Compute filtered students based on current filter selections and search term
   const filteredStudents = students.filter((student) => {
     const batchMatch = batchFilter ? student.batch.toString() === batchFilter : true;
     const deptMatch = deptFilter ? student.department === deptFilter : true;
     const hostelMatch = hostelFilter ? student.hostel_block === hostelFilter : true;
-    return batchMatch && deptMatch && hostelMatch;
+    const searchMatch = searchTerm 
+      ? student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        student.roll_no.toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+    return batchMatch && deptMatch && hostelMatch && searchMatch;
   });
 
   // Unique values for filters
@@ -72,98 +85,172 @@ export default function StudentsData() {
     doc.save("students_data.pdf");
   };
 
-  if (loading) return <div>Loading students...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-800"></div>
+          <p className="mt-4 text-gray-600">Loading students data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Students Data</h1>
-
-      {/* Filter Bar */}
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "1rem", gap: "0.5rem" }}>
-        <FiFilter size={20} style={{ marginRight: "0.5rem" }} />
-        <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)} style={selectStyle}>
-          <option value="">All Batches</option>
-          {uniqueBatches.map((batch) => (
-            <option key={batch} value={batch}>
-              {batch}
-            </option>
-          ))}
-        </select>
-        <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} style={selectStyle}>
-          <option value="">All Departments</option>
-          {uniqueDepts.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
-        <select value={hostelFilter} onChange={(e) => setHostelFilter(e.target.value)} style={selectStyle}>
-          <option value="">All Hostels</option>
-          {uniqueHostels.map((hostel) => (
-            <option key={hostel} value={hostel}>
-              {hostel}
-            </option>
-          ))}
-        </select>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-indigo-900 text-white py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold">Students Data Management</h1>
+          <p className="mt-2 text-indigo-200">View and manage student records</p>
+        </div>
       </div>
       
-      {/* Download Button */}
-      <button
-        onClick={downloadPDF}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.5rem 1rem",
-          backgroundColor: "#1c2f58",
-          color: "#fff",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
-      >
-        Download Data PDF
-      </button>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="bg-indigo-900 px-4 py-4">
+            <h2 className="text-xl font-semibold text-white flex items-center">
+              <FilterIcon className="w-5 h-5 mr-2" />
+              Search and Filter
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+              <div className="lg:col-span-2">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <SearchIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by name or roll number"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <CalendarIcon className="h-4 w-4 text-gray-400" />
+                </div>
+                <select 
+                  value={batchFilter}
+                  onChange={(e) => setBatchFilter(e.target.value)} 
+                  className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Batches</option>
+                  {uniqueBatches.map((batch) => (
+                    <option key={batch} value={batch}>{batch}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <BookOpenIcon className="h-4 w-4 text-gray-400" />
+                </div>
+                <select 
+                  value={deptFilter}
+                  onChange={(e) => setDeptFilter(e.target.value)} 
+                  className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Departments</option>
+                  {uniqueDepts.map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <HomeIcon className="h-4 w-4 text-gray-400" />
+                </div>
+                <select 
+                  value={hostelFilter}
+                  onChange={(e) => setHostelFilter(e.target.value)} 
+                  className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Hostels</option>
+                  {uniqueHostels.map((hostel) => (
+                    <option key={hostel} value={hostel}>{hostel}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-between mt-6">
+              <div className="text-gray-600">
+                {filteredStudents.length} students found
+              </div>
 
-      {/* Students Table */}
-      <table style={tableStyle}>
-        <thead style={theadStyle}>
-          <tr>
-            <th style={thStyle}>Roll No</th>
-            <th style={thStyle}>Full Name</th>
-            <th style={thStyle}>Department</th>
-            <th style={thStyle}>Batch</th>
-            <th style={thStyle}>Room Number</th>
-            <th style={thStyle}>Hostel Block</th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredStudents.map((student) => (
-            <tr key={student.student_id} style={trStyle}>
-              <td style={tdStyle}>{student.roll_no}</td>
-              <td style={tdStyle}>{student.full_name}</td>
-              <td style={tdStyle}>{student.department}</td>
-              <td style={tdStyle}>{student.batch}</td>
-              <td style={tdStyle}>{student.room_number || "-"}</td>
-              <td style={tdStyle}>{student.hostel_block || "-"}</td>
-              <td style={tdStyle}>
-                <Link href={`/admin/student-profile?rollNo=${student.roll_no}`}>
-                  <button style={buttonStyle}>View Profile</button>
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              <button
+                onClick={downloadPDF}
+                className="flex items-center bg-indigo-900 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                <FileDownIcon className="w-4 h-4 mr-2" />
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-indigo-900 px-4 py-4">
+            <h2 className="text-xl font-semibold text-white flex items-center">
+              <UserIcon className="w-5 h-5 mr-2" />
+              Students Records
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hostel</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-16 text-center text-gray-500">
+                      <div className="text-center">
+                        <div className="text-5xl mb-4">🔍</div>
+                        <h3 className="text-xl font-medium text-gray-700">No students found</h3>
+                        <p className="text-gray-500 mt-2">Try changing your search or filter criteria.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((student) => (
+                    <tr key={student.student_id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.roll_no}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{student.full_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{student.department}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{student.batch}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{student.room_number || "-"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{student.hostel_block || "-"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Link href={`/admin/student-profile?rollNo=${student.roll_no}`}>
+                          <button className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 transition px-3 py-1 rounded-full text-xs font-medium">
+                            View Profile
+                          </button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
-
-// Inline Styles
-const tableStyle = { width: "100%", borderCollapse: "collapse", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" };
-const theadStyle = { backgroundColor: "#f0f0f0" };
-const thStyle = { padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ccc", fontWeight: "600" };
-const trStyle = { borderBottom: "1px solid #ddd" };
-const tdStyle = { padding: "0.75rem" };
-const buttonStyle = { padding: "0.5rem 1rem", backgroundColor: "#1c2f58", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" };
-const selectStyle = { padding: "0.3rem", border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "#fff" };
- 
