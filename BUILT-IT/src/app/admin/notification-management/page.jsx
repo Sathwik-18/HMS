@@ -447,7 +447,6 @@ export default function NotificationManagement() {
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

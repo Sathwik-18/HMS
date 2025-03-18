@@ -425,59 +425,6 @@ export default function StudentFeedback() {
           </div>
         </div>
       </div>
-      
-      <footer className="bg-indigo-900 mt-12 py-6 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Academic Links</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Academics</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Academic Calendar</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Holidays</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">E-Payments</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Campus Facilities</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Health Centre</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Counselling Services</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Central Dining Facility</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Campus Facilities</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Services</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Transport Booking</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Green Vehicle Schedule</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Campus Safety</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Internal Complaints Committee</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Infrastructure</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Infrastructure Development Office</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">IIT Indore Home</a></li>
-              </ul>
-              <div className="mt-4">
-                <img src="/api/placeholder/100/100" alt="IIT Indore Logo" className="mx-auto h-16 w-16" />
-              </div>
-            </div>
-          </div>
-          <div className="pt-6 border-t border-indigo-800">
-            <p className="text-indigo-200">Indian Institute of Technology Indore</p>
-            <p className="text-indigo-200 text-sm">Khandwa Road, Simrol, Indore, India - 453552</p>
-            <p className="mt-4 text-indigo-200 text-sm">&copy; {new Date().getFullYear()} Indian Institute of Technology Indore</p>
-            <div className="mt-4 flex justify-center space-x-4">
-              <a href="#" className="text-indigo-200 hover:text-white">Legal Disclaimer</a>
-              <a href="#" className="text-indigo-200 hover:text-white">Sitemap</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

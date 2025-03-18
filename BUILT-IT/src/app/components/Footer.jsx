@@ -18,6 +18,24 @@ const Footer = () => {
 
   return (
     <footer className={styles.footer}>
+      <div className={styles.footerTop}>
+        <div className={styles.instituteBranding}>
+          <div className={styles.instituteLogo}>
+            <Image
+              src="/logo.png"
+              alt="IIT Indore Logo"
+              width={100}
+              height={100}
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+          <div className={styles.instituteInfo}>
+            <h2>Indian Institute of Technology Indore</h2>
+            <p>Khandwa Road, Simrol, Indore, India - 453552</p>
+          </div>
+        </div>
+      </div>
+
       <div className={styles.footerContent}>
         <div className={styles.footerColumn}>
           <h3>Academic Links</h3>
@@ -55,48 +73,36 @@ const Footer = () => {
             <li><Link href="https://ido.iiti.ac.in/">Infrastructure Development Office</Link></li>
             <li><Link href="https://www.iiti.ac.in/">IIT Indore Home</Link></li>
           </ul>
-
-          <div className={styles.instituteLogo}>
-            <Image
-              src="/logo.png"
-              alt="IIT Indore Logo"
-              width={80} // Adjusted size
-              height={80} // Adjusted size
-              style={{ objectFit: 'contain' }} // Ensure it fits within the container
-            />
-          </div>
         </div>
+      </div>
 
-        <div className={styles.footerColumn}>
-          <h3>Follow Us</h3>
-          <div className={styles.socialLinks}>
-            {socialLinks.map((social, index) => (
-              <Link key={index} href={social.url} target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
-                {social.icon}
-                <span className={styles.srOnly}>{social.alt}</span> {/* For accessibility */}
-              </Link>
-            ))}
-          </div>
+      <div className={styles.socialSection}>
+        <h3>Connect With Us</h3>
+        <div className={styles.socialLinks}>
+          {socialLinks.map((social, index) => (
+            <Link key={index} href={social.url} target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
+              {social.icon}
+              <span className={styles.srOnly}>{social.alt}</span>
+            </Link>
+          ))}
         </div>
       </div>
 
       <div className={styles.footerBottom}>
-        <div className={styles.addressInfo}>
-          <p>Indian Institute of Technology Indore</p>
-          <p>Khandwa Road, Simrol, Indore, India - 453552</p>
-        </div>
-
         <div className={styles.copyright}>
           <p>© {currentYear} Indian Institute of Technology Indore</p>
-          <div className={styles.bottomLinks}>
-            <Link href="/legal-disclaimer">Legal Disclaimer</Link>
-            <Link href="/sitemap">Sitemap</Link>
-          </div>
+        </div>
+        <div className={styles.bottomLinks}>
+          <Link href="/legal-disclaimer">Legal Disclaimer</Link>
+          <span className={styles.divider}>|</span>
+          <Link href="/sitemap">Sitemap</Link>
         </div>
       </div>
 
       <div className={styles.scrollToTop}>
-        <a href="#top" aria-label="Scroll to top">↑</a>
+        <a href="#top" aria-label="Scroll to top">
+          <span className={styles.scrollIcon}>↑</span>
+        </a>
       </div>
     </footer>
   );
