@@ -1,21 +1,35 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { PaperclipIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from "lucide-react";
+import { StarIcon, CheckCircleIcon, ClipboardIcon, BarChart3Icon } from "lucide-react";
 
-export default function StudentComplaints() {
+const getCurrentWeekLabel = () => {
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  if (dayOfMonth <= 7) return "Week 1";
+  if (dayOfMonth <= 14) return "Week 2";
+  if (dayOfMonth <= 21) return "Week 3";
+  if (dayOfMonth <= 28) return "Week 4";
+  return "Week 5";
+};
+
+export default function StudentFeedback() {
   const [session, setSession] = useState(null);
   const [student, setStudent] = useState(null);
-  const [complaints, setComplaints] = useState([]);
-  const [loadingComplaints, setLoadingComplaints] = useState(true);
   const [error, setError] = useState("");
-
+  
   // Form state
-  const [complaintType, setComplaintType] = useState("infrastructure");
-  const [description, setDescription] = useState("");
-  const [photo, setPhoto] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState("");
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [infraRating, setInfraRating] = useState("");
+  const [techRating, setTechRating] = useState("");
+  const [cleanRating, setCleanRating] = useState("");
+  const [overallRating, setOverallRating] = useState("");
+  const [statusMsg, setStatusMsg] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  
+  // All feedbacks for this student
+  const [allFeedbacks, setAllFeedbacks] = useState([]);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
 
   useEffect(() => {
     async function getSession() {
@@ -51,103 +65,143 @@ export default function StudentComplaints() {
   }, [session]);
 
   useEffect(() => {
-    async function fetchComplaints() {
+    async function checkFeedback() {
       if (student) {
+        const currentWeek = getCurrentWeekLabel();
         try {
-          const res = await fetch(`/api/complaints?RollNo=${student.roll_no}`);
+          const res = await fetch(
+            `/api/student/feedback?studentId=${student.student_id}&week=${currentWeek}`
+          );
           const data = await res.json();
-          if (data.error) {
-            setError(data.error);
+          if (data.exists) {
+            setFeedbackSubmitted(true);
           } else {
-            setComplaints(data);
+            setFeedbackSubmitted(false);
           }
         } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoadingComplaints(false);
+          console.error("Error checking feedback:", err);
         }
       }
     }
-    fetchComplaints();
+    checkFeedback();
   }, [student]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) {
-      setPhoto(null);
-      setPhotoPreview(null);
-      return;
+  useEffect(() => {
+    async function fetchAllFeedbacks() {
+      if (student) {
+        setLoadingFeedbacks(true);
+        try {
+          const res = await fetch(`/api/student/feedback/all?studentId=${student.student_id}`);
+          if (!res.ok) {
+            const text = await res.text();
+            console.error("Non-OK response:", text);
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const data = await res.json();
+          setAllFeedbacks(data);
+        } catch (err) {
+          console.error("Error fetching all feedbacks:", err);
+        } finally {
+          setLoadingFeedbacks(false);
+        }
+      }
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhoto(reader.result);
-      setPhotoPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
-
+    fetchAllFeedbacks();
+  }, [student, statusMsg]);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!student) {
-      setUploadStatus("Student record not loaded.");
+      setStatusMsg("Student record not loaded.");
       return;
     }
+    const weekLabel = getCurrentWeekLabel();
     try {
-      const res = await fetch("/api/complaints", {
+      const res = await fetch("/api/student/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          RollNo: student.roll_no,
-          type: complaintType,
-          description,
-          photo: photo || null,
+          studentId: student.student_id,
+          feedback_text: feedbackText,
+          infra_rating: parseFloat(infraRating),
+          technical_rating: parseFloat(techRating),
+          cleanliness_rating: parseFloat(cleanRating),
+          overall_rating: parseFloat(overallRating),
+          feedback_week: weekLabel,
           hostel_block: student.hostel_block,
-          room_number: student.room_number,
         }),
       });
       const data = await res.json();
       if (data.error) {
-        setUploadStatus("Error: " + data.error);
+        setStatusMsg("Error: " + data.error);
       } else {
-        setUploadStatus("Complaint filed successfully!");
-        setComplaintType("infrastructure");
-        setDescription("");
-        setPhoto(null);
-        setPhotoPreview(null);
-        const res2 = await fetch(`/api/complaints?RollNo=${student.roll_no}`);
+        setStatusMsg("Feedback submitted successfully!");
+        setFeedbackText("");
+        setInfraRating("");
+        setTechRating("");
+        setCleanRating("");
+        setOverallRating("");
+        setFeedbackSubmitted(true);
+        const res2 = await fetch(`/api/student/feedback/all?studentId=${student.student_id}`);
         const data2 = await res2.json();
-        setComplaints(data2);
+        setAllFeedbacks(data2);
       }
     } catch (err) {
-      setUploadStatus("Error: " + err.message);
+      setStatusMsg("Error: " + err.message);
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch(status.toLowerCase()) {
-      case 'pending':
-        return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><ClockIcon className="w-4 h-4 mr-1" /> Pending</span>
-      case 'resolved':
-        return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><CheckCircleIcon className="w-4 h-4 mr-1" /> Resolved</span>
-      case 'rejected':
-        return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><XCircleIcon className="w-4 h-4 mr-1" /> Rejected</span>
-      default:
-        return <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">{status}</span>
-    }
-  }
+  // Rating stars component
+  const RatingInput = ({ value, onChange, label }) => {
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label} (1-5)
+        </label>
+        <div className="flex items-center">
+          <input
+            type="number"
+            step="0.1"
+            min="1"
+            max="5"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            required
+            className="w-16 border border-gray-300 rounded-md px-3 py-2 mr-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <div className="flex">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <StarIcon
+                key={star}
+                className={`w-6 h-6 cursor-pointer ${
+                  parseFloat(value) >= star
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-300"
+                }`}
+                onClick={() => onChange(star)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-  const getComplaintTypeIcon = (type) => {
-    switch(type) {
-      case 'infrastructure':
+  // Get icon for rating category
+  const getRatingCategoryIcon = (category) => {
+    switch (category) {
+      case "infrastructure":
         return "🏗️";
-      case 'technical':
+      case "technical":
         return "💻";
-      case 'cleanliness':
+      case "cleanliness":
         return "🧹";
+      case "overall":
+        return "⭐";
       default:
-        return "📋";
+        return "📊";
     }
-  }
+  };
 
   if (!session) {
     return (
@@ -155,7 +209,7 @@ export default function StudentComplaints() {
         <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
           <div className="text-6xl mb-4">🔒</div>
           <h2 className="text-2xl font-bold text-gray-800">Authentication Required</h2>
-          <p className="mt-2 text-gray-600">Please sign in to view and manage your complaints.</p>
+          <p className="mt-2 text-gray-600">Please sign in to submit feedback.</p>
           <button className="mt-6 w-full bg-indigo-900 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition">
             Sign In
           </button>
@@ -190,7 +244,7 @@ export default function StudentComplaints() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-indigo-900 text-white py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold">Student Complaints Portal</h1>
+          <h1 className="text-3xl font-bold">Weekly Feedback Portal</h1>
           <p className="mt-2 text-indigo-200">Welcome, {student.name || `Student ${student.roll_no}`}</p>
         </div>
       </div>
@@ -200,74 +254,75 @@ export default function StudentComplaints() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-indigo-900 px-4 py-4">
-                <h2 className="text-xl font-semibold text-white">File a Complaint</h2>
+                <h2 className="text-xl font-semibold text-white">
+                  {getCurrentWeekLabel()} Feedback
+                </h2>
               </div>
               <div className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type of Issue
-                    </label>
-                    <select 
-                      value={complaintType} 
-                      onChange={(e) => setComplaintType(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="infrastructure">Infrastructure</option>
-                      <option value="technical">Technical</option>
-                      <option value="cleanliness">Cleanliness</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      required
-                      rows="4"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Please describe your issue in detail..."
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Photo (optional)
-                    </label>
-                    <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col w-full h-32 border-2 border-indigo-200 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                        <div className="flex flex-col items-center justify-center pt-7">
-                          {photoPreview ? (
-                            <img src={photoPreview} alt="Preview" className="h-16 w-auto object-contain" />
-                          ) : (
-                            <>
-                              <PaperclipIcon className="w-8 h-8 text-gray-400" />
-                              <p className="pt-1 text-sm text-gray-500">Click to upload an image</p>
-                            </>
-                          )}
-                        </div>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                      </label>
+                {feedbackSubmitted ? (
+                  <div className="text-center py-8">
+                    <div className="mb-4 flex justify-center">
+                      <CheckCircleIcon className="w-16 h-16 text-green-500" />
                     </div>
+                    <h3 className="text-xl font-medium text-gray-700">Feedback Submitted</h3>
+                    <p className="text-gray-500 mt-2">
+                      You have already submitted feedback for {getCurrentWeekLabel()}.
+                    </p>
                   </div>
-                  
-                  <button 
-                    type="submit" 
-                    className="w-full bg-indigo-900 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  >
-                    Submit Complaint
-                  </button>
-                </form>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Your Feedback
+                      </label>
+                      <textarea
+                        value={feedbackText}
+                        onChange={(e) => setFeedbackText(e.target.value)}
+                        required
+                        rows="4"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Please share your thoughts and suggestions..."
+                      />
+                    </div>
+
+                    <RatingInput
+                      value={infraRating}
+                      onChange={setInfraRating}
+                      label="Infrastructure Rating"
+                    />
+                    
+                    <RatingInput
+                      value={techRating}
+                      onChange={setTechRating}
+                      label="Technical Rating"
+                    />
+                    
+                    <RatingInput
+                      value={cleanRating}
+                      onChange={setCleanRating}
+                      label="Cleanliness Rating"
+                    />
+                    
+                    <RatingInput
+                      value={overallRating}
+                      onChange={setOverallRating}
+                      label="Overall Rating"
+                    />
+                    
+                    <button 
+                      type="submit" 
+                      className="w-full bg-indigo-900 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                      Submit Feedback
+                    </button>
+                  </form>
+                )}
                 
-                {uploadStatus && (
+                {statusMsg && (
                   <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-green-700 flex items-center">
                       <CheckCircleIcon className="w-5 h-5 mr-2" />
-                      {uploadStatus}
+                      {statusMsg}
                     </p>
                   </div>
                 )}
@@ -278,58 +333,89 @@ export default function StudentComplaints() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-indigo-900 px-4 py-4">
-                <h2 className="text-xl font-semibold text-white">Your Complaints</h2>
+                <h2 className="text-xl font-semibold text-white">Your Feedback History</h2>
               </div>
               <div className="p-6">
-                {loadingComplaints ? (
+                {loadingFeedbacks ? (
                   <div className="flex justify-center items-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-800"></div>
                   </div>
-                ) : complaints.length === 0 ? (
+                ) : allFeedbacks.length === 0 ? (
                   <div className="text-center py-16">
-                    <div className="text-5xl mb-4">📋</div>
-                    <h3 className="text-xl font-medium text-gray-700">No complaints filed</h3>
-                    <p className="text-gray-500 mt-2">You haven't submitted any complaints yet.</p>
+                    <div className="text-5xl mb-4">📝</div>
+                    <h3 className="text-xl font-medium text-gray-700">No feedback submitted</h3>
+                    <p className="text-gray-500 mt-2">You haven't provided any feedback yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {complaints.map((comp) => (
-                      <div key={comp.complaint_id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                    {allFeedbacks.map((fb) => (
+                      <div key={fb.feedback_id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
                         <div className="flex justify-between items-start">
                           <div className="flex space-x-4">
                             <div className="text-2xl">
-                              {getComplaintTypeIcon(comp.type)}
+                              <ClipboardIcon className="w-8 h-8 text-indigo-600" />
                             </div>
                             <div>
-                              <h3 className="font-medium text-gray-900 capitalize">
-                                {comp.type} Issue
+                              <h3 className="font-medium text-gray-900">
+                                {fb.feedback_week}
                               </h3>
                               <p className="text-sm text-gray-500">
-                                Filed on {new Date(comp.created_at).toLocaleDateString()} at {new Date(comp.created_at).toLocaleTimeString()}
+                                Submitted on {new Date(fb.created_at).toLocaleDateString()} at {new Date(fb.created_at).toLocaleTimeString()}
                               </p>
                             </div>
                           </div>
                           <div>
-                            {getStatusBadge(comp.status)}
+                            <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-medium">
+                              Hostel {fb.hostel_block}
+                            </span>
                           </div>
                         </div>
                         
                         <div className="mt-4">
-                          <p className="text-gray-700 whitespace-pre-wrap">{comp.description}</p>
+                          <p className="text-gray-700">{fb.feedback_text}</p>
                         </div>
                         
-                        {comp.resolution_info && (
-                          <div className="mt-4 bg-indigo-50 p-3 rounded-md">
-                            <h4 className="text-sm font-medium text-indigo-900">Resolution Info:</h4>
-                            <p className="text-sm text-indigo-800 mt-1">{comp.resolution_info}</p>
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="bg-gray-50 p-3 rounded-md flex items-center">
+                            <div className="text-2xl mr-3">
+                              {getRatingCategoryIcon("infrastructure")}
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">Infrastructure</div>
+                              <div className="font-semibold">{fb.infra_rating}/5</div>
+                            </div>
                           </div>
-                        )}
-                        
-                        {comp.closed_at && (
-                          <div className="mt-4 text-sm text-gray-500">
-                            <strong>Closed At:</strong> {new Date(comp.closed_at).toLocaleString()}
+                          
+                          <div className="bg-gray-50 p-3 rounded-md flex items-center">
+                            <div className="text-2xl mr-3">
+                              {getRatingCategoryIcon("technical")}
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">Technical</div>
+                              <div className="font-semibold">{fb.technical_rating}/5</div>
+                            </div>
                           </div>
-                        )}
+                          
+                          <div className="bg-gray-50 p-3 rounded-md flex items-center">
+                            <div className="text-2xl mr-3">
+                              {getRatingCategoryIcon("cleanliness")}
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">Cleanliness</div>
+                              <div className="font-semibold">{fb.cleanliness_rating}/5</div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 p-3 rounded-md flex items-center">
+                            <div className="text-2xl mr-3">
+                              {getRatingCategoryIcon("overall")}
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">Overall</div>
+                              <div className="font-semibold">{fb.overall_rating}/5</div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -339,59 +425,6 @@ export default function StudentComplaints() {
           </div>
         </div>
       </div>
-      
-      <footer className="bg-indigo-900 mt-12 py-6 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Academic Links</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Academics</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Academic Calendar</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Holidays</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">E-Payments</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Campus Facilities</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Health Centre</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Counselling Services</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Central Dining Facility</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Campus Facilities</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Services</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Transport Booking</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Green Vehicle Schedule</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Campus Safety</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">Internal Complaints Committee</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-indigo-200">Infrastructure</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-indigo-100 hover:text-white">Infrastructure Development Office</a></li>
-                <li><a href="#" className="text-indigo-100 hover:text-white">IIT Indore Home</a></li>
-              </ul>
-              <div className="mt-4">
-                <img src="/api/placeholder/100/100" alt="IIT Indore Logo" className="mx-auto h-16 w-16" />
-              </div>
-            </div>
-          </div>
-          <div className="pt-6 border-t border-indigo-800">
-            <p className="text-indigo-200">Indian Institute of Technology Indore</p>
-            <p className="text-indigo-200 text-sm">Khandwa Road, Simrol, Indore, India - 453552</p>
-            <p className="mt-4 text-indigo-200 text-sm">&copy; {new Date().getFullYear()} Indian Institute of Technology Indore</p>
-            <div className="mt-4 flex justify-center space-x-4">
-              <a href="#" className="text-indigo-200 hover:text-white">Legal Disclaimer</a>
-              <a href="#" className="text-indigo-200 hover:text-white">Sitemap</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

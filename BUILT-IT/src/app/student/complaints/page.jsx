@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { PaperclipIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from "lucide-react";
 
 export default function StudentComplaints() {
   const [session, setSession] = useState(null);
@@ -14,14 +15,7 @@ export default function StudentComplaints() {
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const complaintsPerPage = 2;
-
-  // Toggle state for filtering complaints
-  const [showPending, setShowPending] = useState(true);
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   useEffect(() => {
     async function getSession() {
@@ -81,11 +75,13 @@ export default function StudentComplaints() {
     const file = e.target.files[0];
     if (!file) {
       setPhoto(null);
+      setPhotoPreview(null);
       return;
     }
     const reader = new FileReader();
     reader.onloadend = () => {
       setPhoto(reader.result);
+      setPhotoPreview(reader.result);
     };
     reader.readAsDataURL(file);
   };
@@ -117,209 +113,231 @@ export default function StudentComplaints() {
         setComplaintType("infrastructure");
         setDescription("");
         setPhoto(null);
+        setPhotoPreview(null);
         const res2 = await fetch(`/api/complaints?RollNo=${student.roll_no}`);
         const data2 = await res2.json();
         setComplaints(data2);
-        setCurrentPage(1); // Reset to the first page after filing a new complaint
       }
     } catch (err) {
       setUploadStatus("Error: " + err.message);
     }
   };
 
-  // Pagination logic
-  const indexOfLastComplaint = currentPage * complaintsPerPage;
-  const indexOfFirstComplaint = indexOfLastComplaint - complaintsPerPage;
+  const getStatusBadge = (status) => {
+    switch(status.toLowerCase()) {
+      case 'pending':
+        return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><ClockIcon className="w-4 h-4 mr-1" /> Pending</span>
+      case 'resolved':
+        return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><CheckCircleIcon className="w-4 h-4 mr-1" /> Resolved</span>
+      case 'rejected':
+        return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><XCircleIcon className="w-4 h-4 mr-1" /> Rejected</span>
+      default:
+        return <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">{status}</span>
+    }
+  }
 
-  // Filter complaints based on toggle states
-  const filteredComplaints = complaints.filter((comp) => {
-    if (showPending && showCompleted) return true;
-    if (showPending && comp.status === "pending") return true;
-    if (showCompleted && comp.status === "completed") return true;
-    return false;
-  });
+  const getComplaintTypeIcon = (type) => {
+    switch(type) {
+      case 'infrastructure':
+        return "🏗️";
+      case 'technical':
+        return "💻";
+      case 'cleanliness':
+        return "🧹";
+      default:
+        return "📋";
+    }
+  }
 
-  const currentComplaints = filteredComplaints.slice(indexOfFirstComplaint, indexOfLastComplaint);
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-800">Authentication Required</h2>
+          <p className="mt-2 text-gray-600">Please sign in to view and manage your complaints.</p>
+          <button className="mt-6 w-full bg-indigo-900 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition">
+            Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  if (!student) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-800"></div>
+          <p className="mt-4 text-gray-600">Loading student record...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Count pending and completed complaints
-  const pendingCount = complaints.filter((comp) => comp.status === "pending").length;
-  const completedCount = complaints.filter((comp) => comp.status === "completed").length;
-
-  if (!session) return <div className="p-8 text-gray-700">Please sign in to view your complaints.</div>;
-  if (!student) return <div className="p-8 text-gray-700">Loading student record...</div>;
-  if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-lg w-full">
+          <h2 className="text-red-700 text-lg font-medium">An error occurred</h2>
+          <p className="mt-2 text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-blue-900 mb-8">Student Complaints</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* File a Complaint Section (Left Side) */}
-        <section className="bg-white p-6 rounded-lg shadow-md border border-blue-100">
-          <h2 className="text-2xl font-semibold text-blue-900 mb-6">File a Complaint</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-blue-900 font-medium mb-2">
-                Type:
-                <select
-                  value={complaintType}
-                  onChange={(e) => setComplaintType(e.target.value)}
-                  className="block w-full mt-1 p-2 border border-blue-300 rounded-md bg-white focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="infrastructure">Infrastructure</option>
-                  <option value="technical">Technical</option>
-                  <option value="cleanliness">Cleanliness</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
-            </div>
-            <div>
-              <label className="block text-blue-900 font-medium mb-2">
-                Description:
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  className="block w-full mt-1 p-2 border border-blue-300 rounded-md bg-white focus:border-blue-500 focus:ring-blue-500"
-                  rows="4"
-                />
-              </label>
-            </div>
-            <div>
-              <label className="block text-blue-900 font-medium mb-2">
-                Upload Photo (optional):
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="block w-full mt-1 p-2 border border-blue-300 rounded-md bg-white file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-50 file:text-blue-900 file:font-medium file:cursor-pointer hover:file:bg-blue-100"
-                />
-              </label>
-            </div>
-            <button
-              type="submit"
-              className="bg-blue-900 text-white px-6 py-2 rounded-md hover:bg-blue-800 transition-colors"
-            >
-              Submit Complaint
-            </button>
-          </form>
-          {uploadStatus && <p className="mt-4 text-green-600">{uploadStatus}</p>}
-        </section>
-
-        {/* Your Complaints Section (Right Side) */}
-        <section className="bg-white p-6 rounded-lg shadow-md border border-blue-100">
-          <h2 className="text-2xl font-semibold text-blue-900 mb-6">Your Complaints</h2>
-
-          {/* Toggles for filtering */}
-          <div className="flex space-x-4 mb-6">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={showPending}
-                onChange={() => setShowPending(!showPending)}
-                className="form-checkbox h-5 w-5 text-blue-900"
-              />
-              <span className="text-blue-900">Show Pending</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={showCompleted}
-                onChange={() => setShowCompleted(!showCompleted)}
-                className="form-checkbox h-5 w-5 text-blue-900"
-              />
-              <span className="text-blue-900">Show Completed</span>
-            </label>
-          </div>
-
-          {/* Side Boxes for Pending and Completed */}
-          <div className="flex space-x-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg flex-1 text-center">
-              <p className="text-blue-900 font-semibold">Pending</p>
-              <p className="text-2xl text-blue-900">{pendingCount}</p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg flex-1 text-center">
-              <p className="text-green-900 font-semibold">Completed</p>
-              <p className="text-2xl text-green-900">{completedCount}</p>
-            </div>
-          </div>
-
-          {loadingComplaints ? (
-            <div className="text-blue-900">Loading complaints...</div>
-          ) : filteredComplaints.length === 0 ? (
-            <div className="text-blue-900">No complaints found.</div>
-          ) : (
-            <>
-              <ul className="space-y-4">
-                {currentComplaints.map((comp) => (
-                  <li key={comp.complaint_id} className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <div className="flex items-center space-x-4">
-                      {/* Icon for complaint type */}
-                      <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full">
-                        {comp.type === "infrastructure" && (
-                          <img src="/icons/infrastructure.png" alt="Infrastructure" className="w-6 h-6" />
-                        )}
-                        {comp.type === "technical" && (
-                          <img src="/icons/technical.png" alt="Technical" className="w-6 h-6" />
-                        )}
-                        {comp.type === "cleanliness" && (
-                          <img src="/icons/cleanliness.png" alt="Cleanliness" className="w-6 h-6" />
-                        )}
-                        {comp.type === "other" && (
-                          <img src="/icons/other.png" alt="Other" className="w-6 h-6" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-blue-900">
-                          <strong>Type:</strong> {comp.type}
-                        </p>
-                        <p className="text-blue-900">
-                          <strong>Status:</strong> {comp.status}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-blue-900 mt-2">
-                      <strong>Description:</strong> {comp.description}
-                    </p>
-                    {comp.closed_at && (
-                      <p className="text-blue-900">
-                        <strong>Closed At:</strong> {new Date(comp.closed_at).toLocaleString()}
-                      </p>
-                    )}
-                    {comp.resolution_info && (
-                      <p className="text-blue-900">
-                        <strong>Resolution Info:</strong> {comp.resolution_info}
-                      </p>
-                    )}
-                    <p className="text-blue-900">
-                      <strong>Filed on:</strong> {new Date(comp.created_at).toLocaleString()}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              {/* Pagination Controls */}
-              <div className="flex justify-between items-center mt-6">
-                <button
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 disabled:bg-blue-300 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <span className="text-blue-900">Page {currentPage}</span>
-                <button
-                  onClick={() => paginate(currentPage + 1)}
-                  disabled={indexOfLastComplaint >= filteredComplaints.length}
-                  className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 disabled:bg-blue-300 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-indigo-900 text-white py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold">Student Complaints Portal</h1>
+          <p className="mt-2 text-indigo-200">Welcome, {student.name || `Student ${student.roll_no}`}</p>
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-indigo-900 px-4 py-4">
+                <h2 className="text-xl font-semibold text-white">File a Complaint</h2>
               </div>
-            </>
-          )}
-        </section>
+              <div className="p-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type of Issue
+                    </label>
+                    <select 
+                      value={complaintType} 
+                      onChange={(e) => setComplaintType(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="infrastructure">Infrastructure</option>
+                      <option value="technical">Technical</option>
+                      <option value="cleanliness">Cleanliness</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      required
+                      rows="4"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Please describe your issue in detail..."
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Upload Photo (optional)
+                    </label>
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col w-full h-32 border-2 border-indigo-200 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-7">
+                          {photoPreview ? (
+                            <img src={photoPreview} alt="Preview" className="h-16 w-auto object-contain" />
+                          ) : (
+                            <>
+                              <PaperclipIcon className="w-8 h-8 text-gray-400" />
+                              <p className="pt-1 text-sm text-gray-500">Click to upload an image</p>
+                            </>
+                          )}
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    type="submit" 
+                    className="w-full bg-indigo-900 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    Submit Complaint
+                  </button>
+                </form>
+                
+                {uploadStatus && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-green-700 flex items-center">
+                      <CheckCircleIcon className="w-5 h-5 mr-2" />
+                      {uploadStatus}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-indigo-900 px-4 py-4">
+                <h2 className="text-xl font-semibold text-white">Your Complaints</h2>
+              </div>
+              <div className="p-6">
+                {loadingComplaints ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-800"></div>
+                  </div>
+                ) : complaints.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="text-5xl mb-4">📋</div>
+                    <h3 className="text-xl font-medium text-gray-700">No complaints filed</h3>
+                    <p className="text-gray-500 mt-2">You haven't submitted any complaints yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {complaints.map((comp) => (
+                      <div key={comp.complaint_id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                        <div className="flex justify-between items-start">
+                          <div className="flex space-x-4">
+                            <div className="text-2xl">
+                              {getComplaintTypeIcon(comp.type)}
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900 capitalize">
+                                {comp.type} Issue
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                Filed on {new Date(comp.created_at).toLocaleDateString()} at {new Date(comp.created_at).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            {getStatusBadge(comp.status)}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4">
+                          <p className="text-gray-700 whitespace-pre-wrap">{comp.description}</p>
+                        </div>
+                        
+                        {comp.resolution_info && (
+                          <div className="mt-4 bg-indigo-50 p-3 rounded-md">
+                            <h4 className="text-sm font-medium text-indigo-900">Resolution Info:</h4>
+                            <p className="text-sm text-indigo-800 mt-1">{comp.resolution_info}</p>
+                          </div>
+                        )}
+                        
+                        {comp.closed_at && (
+                          <div className="mt-4 text-sm text-gray-500">
+                            <strong>Closed At:</strong> {new Date(comp.closed_at).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
