@@ -261,7 +261,6 @@ export default function NotificationManagement() {
           <table style={tableStyle}>
             <thead style={theadStyle}>
               <tr>
-                <th style={thStyle}>ID</th>
                 <th style={thStyle}>Subject</th>
                 <th style={thStyle}>Message</th>
                 <th style={thStyle}>Recipients</th>
@@ -271,7 +270,6 @@ export default function NotificationManagement() {
             <tbody>
               {notificationsHistory.map(n => (
                 <tr key={n.notification_id} style={trStyle}>
-                  <td style={tdStyle}>{n.notification_id}</td>
                   <td style={tdStyle}>{n.subject}</td>
                   <td style={tdStyle}>{n.message}</td>
                   <td style={tdStyle}>{n.recipients}</td>

@@ -1,55 +1,33 @@
 "use client";
-import { useState } from "react";
+
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import GoogleSignInButton from "@/app/components/GoogleSignInButton";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
 
-  const handleSignIn = async (e) => {
-    e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
     if (error) {
-      setErrorMsg(error.message);
+      console.error("Error signing in with Google:", error.message);
     } else {
-      router.push("/role-redirect"); // Redirect based on role
+      router.push("/role-redirect");
     }
   };
 
   return (
     <div style={styles.container}>
-      <h1>Sign In</h1>
-      <form onSubmit={handleSignIn} style={styles.form}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-          required
-        />
-        {errorMsg && <p style={styles.error}>{errorMsg}</p>}
-        <button type="submit" style={styles.button}>Sign In</button>
-      </form>
-      <div style={{ margin: "1rem 0" }}>
-        <GoogleSignInButton />
+      <div style={styles.card}>
+        <h1 style={styles.title}>Login with institute email</h1>
+        <p style={styles.subtitle}>Please use official insitute email to sign in</p>
+        <button onClick={handleGoogleSignIn} style={styles.googleButton}>
+          <FcGoogle size={24} style={{ marginRight: "8px" }} />
+          Sign in with Google
+        </button>
       </div>
-      <p style={{ marginTop: "1rem" }}>
-        Don't have an account? <Link href="/sign-up">Sign Up</Link>
-      </p>
     </div>
   );
 }
@@ -57,13 +35,50 @@ export default function SignInPage() {
 const styles = {
   container: {
     display: "flex",
-    flexDirection: "column",
+    justifyContent: "center",
     alignItems: "center",
     minHeight: "100vh",
-    justifyContent: "center",
+    backgroundImage: "url('/background.png')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    width: "100vw",
+    height: "100vh",
+    overflow: "hidden",
   },
-  form: { display: "flex", flexDirection: "column", gap: "1rem", width: "300px" },
-  input: { padding: "0.75rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px" },
-  button: { padding: "0.75rem", backgroundColor: "#1c2f58", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
-  error: { color: "red" },
+  card: {
+    backdropFilter: "blur(10px)",
+    background: "rgba(255, 255, 255, 0.2)",
+    borderRadius: "12px",
+    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+    padding: "2rem",
+    textAlign: "center",
+    width: "320px",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+  },
+  title: {
+    fontSize: "1.8rem",
+    fontWeight: "bold",
+    color: "#fff",
+    marginTop: "1rem",
+  },
+  subtitle: {
+    fontSize: "1rem",
+    color: "#e0e0e0",
+    marginBottom: "1.5rem",
+  },
+  googleButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "1rem",
+    backgroundColor: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "1rem",
+    fontWeight: "bold",
+    color: "#333",
+    width: "100%",
+  },
 };
