@@ -172,7 +172,7 @@ export default function StudentComplaints() {
             {complaints.map((comp) => (
               <li key={comp.complaint_id} style={{ marginBottom: "1rem", borderBottom: "1px solid #ccc", paddingBottom: "1rem" }}>
                 <p>
-                  <strong>ID:</strong> {comp.complaint_id} | <strong>Roll No:</strong> {comp.roll_no}
+                  <strong>Roll No:</strong> {comp.roll_no}
                 </p>
                 <p>
                   <strong>Type:</strong> {comp.type}

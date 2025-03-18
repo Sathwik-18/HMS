@@ -4,14 +4,27 @@ import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
-    // Occupancy: count students that have a room_number (occupied) vs. null (vacant)
-    const occupancyResult = await query(`
+    // Overall occupancy: count students that have a room_number (occupied) vs. null (vacant)
+    const overallResult = await query(`
       SELECT 
         COUNT(*) FILTER (WHERE room_number IS NOT NULL) AS occupied,
         COUNT(*) FILTER (WHERE room_number IS NULL) AS vacant
       FROM students
     `);
-    const occupancy = occupancyResult.rows[0];
+    const overallOccupancy = overallResult.rows[0];
+
+    // Occupancy per hostel: group by hostel_block and count
+    const hostelResult = await query(`
+      SELECT 
+        hostel_block,
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE room_number IS NOT NULL) AS occupied,
+        COUNT(*) FILTER (WHERE room_number IS NULL) AS vacant
+      FROM students
+      GROUP BY hostel_block
+      ORDER BY hostel_block ASC
+    `);
+    const hostels = hostelResult.rows;
 
     // Complaint resolution: count infrastructure complaints by status.
     const complaintResult = await query(`
@@ -24,11 +37,19 @@ export async function GET(request) {
     `);
     const complaints = complaintResult.rows[0];
 
-    // Build the data object
+    // Build the data object with overall occupancy and occupancy per hostel
     const data = {
       occupancy: {
-        occupied: parseInt(occupancy.occupied, 10),
-        vacant: parseInt(occupancy.vacant, 10)
+        overall: {
+          occupied: parseInt(overallOccupancy.occupied, 10),
+          vacant: parseInt(overallOccupancy.vacant, 10)
+        },
+        hostels: hostels.map((row) => ({
+          hostel_block: row.hostel_block,
+          total: parseInt(row.total, 10),
+          occupied: parseInt(row.occupied, 10),
+          vacant: parseInt(row.vacant, 10)
+        }))
       },
       complaints: {
         pending: parseInt(complaints.pending, 10),

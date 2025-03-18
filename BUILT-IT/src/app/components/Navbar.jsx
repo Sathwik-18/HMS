@@ -1,9 +1,10 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { FaHome } from "react-icons/fa";
+import { FiMenu } from "react-icons/fi";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
@@ -12,8 +13,9 @@ export default function Navbar() {
   const [role, setRole] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [homePath, setHomePath] = useState("/"); // New state variable for home redirection
+  const [homePath, setHomePath] = useState("/");
   const router = useRouter();
+  const profileRef = useRef(null);
 
   useEffect(() => {
     async function getSession() {
@@ -80,87 +82,124 @@ export default function Navbar() {
     };
   }, []);
 
-  // Redirect user based on role
+  // Close profile dropdown if clicking outside of it
   useEffect(() => {
-    if (role) {
-      router.push(homePath);
-    }
-  }, [role, homePath, router]);
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Render links based on role
   const renderLinks = () => {
     if (!session) {
       return (
-        <li>
-          <Link href="/sign-in">Sign In</Link>
+        <li className={styles.navItem}>
+          <Link href="/sign-in" className={styles.navLink}>Sign In</Link>
         </li>
       );
     }
     if (role === "admin") {
       return (
         <>
-          <li><Link href="/admin">Home</Link></li>
-          <li><Link href="/admin/students-data">Students Data</Link></li>
-          <li><Link href="/admin/spreadsheet-integration">Upload Data</Link></li>
-          <li><Link href="/admin/maintenance-tracking">Maintenance</Link></li>
-          <li><Link href="/admin/room-request-tracking">Room Requests</Link></li>
-          <li><Link href="/admin/notification-management">Notifications</Link></li>
-          <li><Link href="/admin/feedback">Feedbacks</Link></li>
+          <li className={styles.navItem}>
+            <Link href="/admin" className={styles.navLink}>
+              <FaHome className={styles.homeIcon} /> Home
+            </Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/admin/students-data" className={styles.navLink}>Students Data</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/admin/spreadsheet-integration" className={styles.navLink}>Upload Data</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/admin/maintenance-tracking" className={styles.navLink}>Maintenance</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/admin/room-request-tracking" className={styles.navLink}>Room Requests</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/admin/notification-management" className={styles.navLink}>Notifications</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/admin/feedback" className={styles.navLink}>Feedbacks</Link>
+          </li>
         </>
       );
     } else if (role === "student") {
       return (
         <>
-          <li><Link href="/student">Home</Link></li>
-          <li><Link href="/student/profile">Profile</Link></li>
-          <li><Link href="/student/complaints">Complaints</Link></li>
-          <li><Link href="/student/room-change-request">Room Change</Link></li>
-          <li><Link href="/student/feedback">Feedback</Link></li>
+          <li className={styles.navItem}>
+            <Link href="/student" className={styles.navLink}>
+              <FaHome className={styles.homeIcon} /> Home
+            </Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/student/profile" className={styles.navLink}>Profile</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/student/complaints" className={styles.navLink}>Complaints</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/student/room-change-request" className={styles.navLink}>Room Change</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/student/feedback" className={styles.navLink}>Feedback</Link>
+          </li>
         </>
       );
     } else if (role === "guard") {
       return (
         <>
-          <li><Link href="/guard/check-in-out">Home</Link></li>
-          <li><Link href="/guard/visitor-management">Visitor Management</Link></li>
+          <li className={styles.navItem}>
+            <Link href="/guard" className={styles.navLink}>
+              <FaHome className={styles.homeIcon} /> Home
+            </Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/guard/check-in-out" className={styles.navLink}>Check-In/Out</Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/guard/visitor-management" className={styles.navLink}>Visitor Management</Link>
+          </li>
         </>
       );
     } else {
       return (
-        <li>
-          <Link href="/">Home</Link>
+        <li className={styles.navItem}>
+          <Link href="/" className={styles.navLink}>Home</Link>
         </li>
       );
     }
   };
 
+  const avatarUrl = userData?.user_metadata?.avatar_url;
+  const fullName = userData?.user_metadata?.full_name;
+
   return (
     <nav className={styles.navbar}>
-      {/* Left Side: Logo & Brand */}
       <div className={styles.navbarLeft}>
         <Link href={homePath} className={styles.logoLink}>
           <img src="/logo.png" alt="IIT Indore Logo" className={styles.logo} />
           <span className={styles.brandName}>HMS - IIT Indore</span>
         </Link>
       </div>
-      {/* Right Side: Navigation Links & Auth */}
       <div className={styles.navbarRight}>
         <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ""}`}>
           {renderLinks()}
         </ul>
         {session && (
-          <div className={styles.profileContainer}>
+          <div ref={profileRef} className={styles.profileContainer}>
             <div 
               className={styles.profileIcon} 
               onClick={() => setProfileOpen(!profileOpen)}
-              style={{ cursor: "pointer" }}
             >
-              {userData?.user_metadata?.avatar_url ? (
-                <img
-                  src={userData.user_metadata.avatar_url}
-                  alt="Profile"
-                  className={styles.profilePic}
-                />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className={styles.profilePic} />
               ) : (
                 <div className={styles.profilePicFallback}>
                   {userData?.email?.charAt(0).toUpperCase()}
@@ -169,6 +208,7 @@ export default function Navbar() {
             </div>
             {profileOpen && (
               <div className={styles.profileDropdown}>
+                <p className={styles.profileName}>{fullName}</p>
                 <p className={styles.profileEmail}>{userData.email}</p>
                 <button
                   onClick={async () => {
@@ -184,15 +224,12 @@ export default function Navbar() {
             )}
           </div>
         )}
-        {/* Hamburger for Mobile */}
         <button
           className={styles.hamburger}
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
-          <span className={styles.bar}></span>
-          <span className={styles.bar}></span>
-          <span className={styles.bar}></span>
+          <FiMenu className={styles.hamburgerIcon} />
         </button>
       </div>
     </nav>

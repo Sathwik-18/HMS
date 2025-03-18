@@ -1,9 +1,8 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import styles from "./page.module.css";
+import styles from "./page.module.css"; // Use a separate CSS module for styling
 
 export default function StudentProfile() {
   const [session, setSession] = useState(null);
@@ -18,7 +17,6 @@ export default function StudentProfile() {
       setSession(session);
     }
     getSession();
-
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -90,6 +88,12 @@ export default function StudentProfile() {
           </p>
           <p className={styles.text}>
             <strong>Hostel Block:</strong> {student.hostel_block ? student.hostel_block : "Not Assigned"}
+          </p>
+        </section>
+        <section className={styles.statusSection}>
+          <h2 className={styles.sectionHeading}>Status</h2>
+          <p className={styles.text}>
+            <strong>Current Status:</strong> {student.in_status ? "Inside Hostel" : "Outside Hostel"}
           </p>
         </section>
         <section className={styles.actionsSection}>
