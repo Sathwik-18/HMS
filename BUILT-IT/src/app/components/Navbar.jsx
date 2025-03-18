@@ -148,6 +148,9 @@ export default function Navbar() {
             <Link href="/student/room-change-request" className={styles.navLink}>Room Change</Link>
           </li>
           <li className={styles.navItem}>
+            <Link href="/student/visitor-request" className={styles.navLink}>Visitor Request</Link>
+          </li>
+          <li className={styles.navItem}>
             <Link href="/student/feedback" className={styles.navLink}>Feedback</Link>
           </li>
         </>
