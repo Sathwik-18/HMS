@@ -15,7 +15,6 @@ export default function StudentComplaints() {
   const [photo, setPhoto] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
 
-  // Get session using Supabase auth
   useEffect(() => {
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -28,17 +27,14 @@ export default function StudentComplaints() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Fetch student record using roll_no (derived from email)
   useEffect(() => {
     async function fetchStudent() {
       if (session && session.user) {
         const email = session.user.email;
         const rollNo = email.split("@")[0];
-        console.log("Fetched email:", email, "Computed rollNo:", rollNo);
         try {
           const res = await fetch(`/api/student?rollNo=${rollNo}`);
           const data = await res.json();
-          console.log("Student API response:", data);
           if (data.error) {
             setError(data.error);
           } else {
@@ -52,7 +48,6 @@ export default function StudentComplaints() {
     fetchStudent();
   }, [session]);
 
-  // Fetch complaints using roll_no from student record
   useEffect(() => {
     async function fetchComplaints() {
       if (student) {
@@ -74,7 +69,6 @@ export default function StudentComplaints() {
     fetchComplaints();
   }, [student]);
 
-  // Handle file input change: convert file to base64 string
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -88,7 +82,6 @@ export default function StudentComplaints() {
     reader.readAsDataURL(file);
   };
 
-  // Handle complaint form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!student) {
@@ -104,6 +97,8 @@ export default function StudentComplaints() {
           type: complaintType,
           description,
           photo: photo || null,
+          hostel_block: student.hostel_block,  // Extra field from student record
+          room_number: student.room_number,    // Extra field from student record
         }),
       });
       const data = await res.json();
@@ -111,11 +106,9 @@ export default function StudentComplaints() {
         setUploadStatus("Error: " + data.error);
       } else {
         setUploadStatus("Complaint filed successfully!");
-        // Clear form fields
         setComplaintType("infrastructure");
         setDescription("");
         setPhoto(null);
-        // Refresh complaints list
         const res2 = await fetch(`/api/complaints?RollNo=${student.roll_no}`);
         const data2 = await res2.json();
         setComplaints(data2);
@@ -133,7 +126,6 @@ export default function StudentComplaints() {
     <div style={{ padding: "2rem" }}>
       <h1>Student Complaints</h1>
       
-      {/* Complaint Form */}
       <section style={{ marginBottom: "2rem" }}>
         <h2>File a Complaint</h2>
         <form onSubmit={handleSubmit}>
@@ -169,7 +161,6 @@ export default function StudentComplaints() {
         {uploadStatus && <p style={{ color: "green" }}>{uploadStatus}</p>}
       </section>
 
-      {/* Complaints List */}
       <section>
         <h2>Your Complaints</h2>
         {loadingComplaints ? (

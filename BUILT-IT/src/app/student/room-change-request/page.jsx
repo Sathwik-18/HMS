@@ -58,7 +58,7 @@ export default function RoomChangeRequest() {
       return;
     }
     try {
-      const res = await fetch(`/api/student/checkRoomAvailability?room=${preferredRoom}`);
+      const res = await fetch(`/api/student/checkRoomAvailability?room=${preferredRoom}&hostel=${student.hostel_block}`);
       const data = await res.json();
       if (data.error) {
         setAvailabilityMsg("Error: " + data.error);

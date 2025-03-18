@@ -62,7 +62,9 @@ export default function NotificationManagement() {
       filtered = filtered.filter(s => s.hostel_block === hostelFilter);
     }
     if (searchQuery) {
-      filtered = filtered.filter(s => s.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      filtered = filtered.filter(s =>
+        s.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
     setFilteredStudents(filtered);
   }, [students, batchFilter, deptFilter, hostelFilter, searchQuery]);
@@ -79,6 +81,29 @@ export default function NotificationManagement() {
       setSelectedRecipients([...selectedRecipients, email]);
     }
   };
+  
+  // Toggle select/deselect all for filtered students
+  const toggleSelectAll = () => {
+    const filteredEmails = filteredStudents.map(student => student.email);
+    const areAllSelected =
+      filteredEmails.length > 0 &&
+      filteredEmails.every(email => selectedRecipients.includes(email));
+    if (areAllSelected) {
+      // Deselect all filtered recipients
+      setSelectedRecipients(selectedRecipients.filter(email => !filteredEmails.includes(email)));
+    } else {
+      // Select all filtered recipients (avoiding duplicates)
+      const newSelection = [...new Set([...selectedRecipients, ...filteredEmails])];
+      setSelectedRecipients(newSelection);
+    }
+  };
+  
+  // Determine toggle button text
+  const filteredEmails = filteredStudents.map(student => student.email);
+  const areAllFilteredSelected =
+    filteredEmails.length > 0 &&
+    filteredEmails.every(email => selectedRecipients.includes(email));
+  const toggleButtonText = areAllFilteredSelected ? "Deselect All" : "Select All";
   
   // Handle sending notification using Nodemailer via our API
   const handleSendNotification = async (e) => {
@@ -154,6 +179,9 @@ export default function NotificationManagement() {
           />
         </div>
       </div>
+      
+      {/* Select All / Deselect All Button */}
+      <button onClick={toggleSelectAll} style={buttonStyle}>{toggleButtonText}</button>
       
       {/* Recipients Table */}
       <h2>Recipients</h2>
@@ -292,6 +320,7 @@ const buttonStyle = {
   border: "none",
   borderRadius: "4px",
   cursor: "pointer",
+  marginBottom: "1rem"
 };
 
 const selectStyle = {
