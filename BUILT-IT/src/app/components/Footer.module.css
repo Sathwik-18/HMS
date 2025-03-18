@@ -1,32 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Jersey+15&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Oswald:wght@200..700&family=Outfit:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Teko:wght@300..700&display=swap');
+/* Footer.module.css */
 .footer {
-  background-color: #2d236e;
-  color: #ffffff;
-  padding: 3rem 2rem;
+  background: linear-gradient(to bottom, #002855, #001233);
+  color: #f8f9fa;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   position: relative;
-  font-family: 'Outfit', sans-serif;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.footerTop {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 2rem 4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.instituteBranding {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.instituteLogo {
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.instituteInfo h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.instituteInfo p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #e0e0e0;
 }
 
 .footerContent {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 2rem;
-  max-width: 1200px;
+  padding: 3rem 4rem 2rem;
+  max-width: 1400px;
   margin: 0 auto;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footerColumn {
-  padding-right: 1rem;
 }
 
 .footerColumn h3 {
+  color: #ffffff;
   font-size: 1.1rem;
-  margin-bottom: 1rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
   position: relative;
-  padding-bottom: 0.5rem;
-  color: #f0ad4e;
+  padding-bottom: 0.8rem;
 }
 
 .footerColumn h3::after {
@@ -35,8 +70,9 @@
   left: 0;
   bottom: 0;
   width: 40px;
-  height: 2px;
-  background-color: #f0ad4e;
+  height: 3px;
+  background: #0074d9;
+  border-radius: 2px;
 }
 
 .footerColumn ul {
@@ -46,122 +82,65 @@
 }
 
 .footerColumn ul li {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
 }
 
 .footerColumn ul li a {
-  color: #ffffff;
+  color: #e0e0e0;
   text-decoration: none;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 0.9rem;
   display: inline-block;
 }
 
 .footerColumn ul li a:hover {
-  color: #f0ad4e;
-  text-decoration: underline;
-}
-
-.instituteLogo {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-start; /* Initially align to start */
-  align-items: center; /* Vertically center the logo */
-}
-
-.footerBottom {
-  padding-top: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding-bottom: 2rem;
-}
-
-.addressInfo {
-  text-align: left;
-  margin-bottom: 0;
-}
-
-.addressInfo p {
-  margin: 0.3rem 0;
-  font-size: 0.85rem;
-}
-
-.copyright {
-  text-align: right;
-  font-size: 0.85rem;
-  margin-top: 0;
-}
-
-.bottomLinks {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.bottomLinks a {
   color: #ffffff;
-  text-decoration: none;
-  font-size: 0.8rem;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
+  transform: translateX(3px);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
-.bottomLinks a:hover {
-  color: #f0ad4e;
-  text-decoration: underline;
+.socialSection {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem 4rem;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.scrollToTop {
-  position: fixed;
-  right: 2rem;
-  bottom: 2rem;
-  z-index: 10;
+.socialSection h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #ffffff;
 }
 
-.scrollToTop a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 40px;
-  height: 40px;
-  background-color: #f0ad4e;
-  color: #2d236e;
-  text-decoration: none;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  font-weight: bold;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.scrollToTop a:hover {
-  background-color: #ffffff;
-  color: #2d236e;
-}
-
-/* Social Links Styles */
 .socialLinks {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
 .socialIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
   color: #ffffff;
-  font-size: 1.5rem;
-  text-decoration: none;
-  transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
 }
 
 .socialIcon:hover {
-  color: #f0ad4e;
-  transform: scale(1.1);
+  background-color: #0074d9;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 116, 217, 0.5);
 }
 
-/* Accessibility helper */
 .srOnly {
   position: absolute;
   width: 1px;
@@ -174,69 +153,102 @@
   border-width: 0;
 }
 
-/* Responsive design */
-@media (max-width: 992px) { /* Adjust for medium-sized screens */
-  .footerContent {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Slightly wider min-width */
-  }
+.footerBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 4rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.copyright {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+}
+
+.copyright p {
+  margin: 0;
+}
+
+.bottomLinks {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.bottomLinks a {
+  color: #b0b0b0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.bottomLinks a:hover {
+  color: #ffffff;
+}
+
+.divider {
+  color: #555;
+}
+
+.scrollToTop {
+  position: absolute;
+  right: 2rem;
+  bottom: 2rem;
+}
+
+.scrollToTop a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #0074d9;
+  color: white;
+  border-radius: 50%;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.scrollToTop a:hover {
+  background-color: #0050a0;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.scrollIcon {
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 @media (max-width: 768px) {
+  .footerTop {
+    padding: 2rem;
+  }
+  
+  .instituteBranding {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
   .footerContent {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    padding: 2rem;
     gap: 1.5rem;
   }
-
-  .instituteLogo {
-    justify-content: flex-start;
+  
+  .socialSection {
+    padding: 1.5rem 2rem;
   }
-
+  
   .footerBottom {
     flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-  }
-
-  .copyright {
-    text-align: left;
-  }
-
-  .socialLinks {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 576px) { /* Adjust for smaller screens */
-  .footerContent {
-    grid-template-columns: 1fr; /* Single column on smaller screens */
-    gap: 1rem;
-  }
-
-  .instituteLogo {
-    justify-content: center; /* Center the logo when on a single column */
-  }
-
-  .socialLinks {
-    justify-content: center; /* Center social icons on smaller screens */
-  }
-
-  .footerBottom {
-    align-items: center; /* Center bottom info on smaller screens */
+    align-items: center;
     text-align: center;
-  }
-
-  .copyright {
-    text-align: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .footer {
-    padding: 2rem 1rem;
-  }
-
-  .bottomLinks {
-    flex-direction: column;
-    gap: 0.5rem;
+    padding: 1.5rem 2rem;
   }
 }

@@ -3,9 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { FaHome } from "react-icons/fa";
-import { FiMenu } from "react-icons/fi";
-import styles from "./Navbar.module.css";
+import { FaHome, FaUser, FaSignOutAlt, FaClipboardList } from "react-icons/fa";
+import { FiMenu, FiX, FiBell, FiFileText, FiUsers, FiUpload, FiTool, FiHome } from "react-icons/fi";
 
 export default function Navbar() {
   const [session, setSession] = useState(null);
@@ -16,6 +15,7 @@ export default function Navbar() {
   const [homePath, setHomePath] = useState("/");
   const router = useRouter();
   const profileRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     async function getSession() {
@@ -82,11 +82,14 @@ export default function Navbar() {
     };
   }, []);
 
-  // Close profile dropdown if clicking outside of it
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
+      }
+      if (menuRef.current && !menuRef.current.contains(e.target) && window.innerWidth < 768) {
+        setMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -97,84 +100,132 @@ export default function Navbar() {
   const renderLinks = () => {
     if (!session) {
       return (
-        <li className={styles.navItem}>
-          <Link href="/sign-in" className={styles.navLink}>Sign In</Link>
+        <li className="group">
+          <Link href="/sign-in" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <FaUser className="mr-2" /> 
+            <span>Sign In</span>
+          </Link>
         </li>
       );
     }
     if (role === "admin") {
       return (
         <>
-          <li className={styles.navItem}>
-            <Link href="/admin" className={styles.navLink}>
-              <FaHome className={styles.homeIcon} /> Home
+          <li className="group">
+            <Link href="/admin" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FaHome className="mr-2" /> 
+              <span>Home</span>
             </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/admin/students-data" className={styles.navLink}>Students Data</Link>
+          <li className="group">
+            <Link href="/admin/students-data" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiUsers className="mr-2" /> 
+              <span>Data</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/admin/spreadsheet-integration" className={styles.navLink}>Upload Data</Link>
+          <li className="group">
+            <Link href="/admin/spreadsheet-integration" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiUpload className="mr-2" /> 
+              <span>Upload</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/admin/maintenance-tracking" className={styles.navLink}>Maintenance</Link>
+          <li className="group">
+            <Link href="/admin/maintenance-tracking" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiTool className="mr-2" /> 
+              <span>Maintenance</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/admin/room-request-tracking" className={styles.navLink}>Room Requests</Link>
+          <li className="group">
+            <Link href="/admin/room-request-tracking" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiHome className="mr-2" /> 
+              <span>Rooms</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/admin/notification-management" className={styles.navLink}>Notifications</Link>
+          <li className="group">
+            <Link href="/admin/notification-management" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiBell className="mr-2" /> 
+              <span>Notifications</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/admin/feedback" className={styles.navLink}>Feedbacks</Link>
+          <li className="group">
+            <Link href="/admin/feedback" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiFileText className="mr-2" /> 
+              <span>Feedbacks</span>
+            </Link>
           </li>
         </>
       );
     } else if (role === "student") {
       return (
         <>
-          <li className={styles.navItem}>
-            <Link href="/student" className={styles.navLink}>
-              <FaHome className={styles.homeIcon} /> Home
+          <li className="group">
+            <Link href="/student" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FaHome className="mr-2" /> 
+              <span>Home</span>
             </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/student/profile" className={styles.navLink}>Profile</Link>
+          <li className="group">
+            <Link href="/student/profile" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FaUser className="mr-2" /> 
+              <span>Profile</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/student/complaints" className={styles.navLink}>Complaints</Link>
+          <li className="group">
+            <Link href="/student/complaints" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiFileText className="mr-2" /> 
+              <span>Complaints</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/student/room-change-request" className={styles.navLink}>Room Change</Link>
+          <li className="group">
+            <Link href="/student/room-change-request" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiHome className="mr-2" /> 
+              <span>Room Change</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/student/visitor-request" className={styles.navLink}>Visitor Request</Link>
+          <li className="group">
+            <Link href="/student/visitor-request" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiUsers className="mr-2" /> 
+              <span>Visitor Request</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/student/feedback" className={styles.navLink}>Feedback</Link>
+          <li className="group">
+            <Link href="/student/feedback" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiFileText className="mr-2" /> 
+              <span>Feedback</span>
+            </Link>
           </li>
         </>
       );
     } else if (role === "guard") {
       return (
         <>
-          <li className={styles.navItem}>
-            <Link href="/guard" className={styles.navLink}>
-              <FaHome className={styles.homeIcon} /> Home
+          <li className="group">
+            <Link href="/guard" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FaHome className="mr-2" /> 
+              <span>Home</span>
             </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/guard/check-in-out" className={styles.navLink}>Check-In/Out</Link>
+          <li className="group">
+            <Link href="/guard/check-in-out" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FaClipboardList className="mr-2" /> 
+              <span>Check-In/Out</span>
+            </Link>
           </li>
-          <li className={styles.navItem}>
-            <Link href="/guard/visitor-management" className={styles.navLink}>Visitor Management</Link>
+          <li className="group">
+            <Link href="/guard/visitor-management" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FiUsers className="mr-2" /> 
+              <span>Visitor Management</span>
+            </Link>
           </li>
         </>
       );
     } else {
       return (
-        <li className={styles.navItem}>
-          <Link href="/" className={styles.navLink}>Home</Link>
+        <li className="group">
+          <Link href="/" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <FaHome className="mr-2" /> 
+            <span>Home</span>
+          </Link>
         </li>
       );
     }
@@ -184,57 +235,98 @@ export default function Navbar() {
   const fullName = userData?.user_metadata?.full_name;
 
   return (
-    <nav className={styles.navbar}>
-      <div className={styles.navbarLeft}>
-        <Link href={homePath} className={styles.logoLink}>
-          <img src="/logo.png" alt="IIT Indore Logo" className={styles.logo} />
-          <span className={styles.brandName}>HMS - IIT Indore</span>
-        </Link>
-      </div>
-      <div className={styles.navbarRight}>
-        <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ""}`}>
-          {renderLinks()}
-        </ul>
-        {session && (
-          <div ref={profileRef} className={styles.profileContainer}>
-            <div 
-              className={styles.profileIcon} 
-              onClick={() => setProfileOpen(!profileOpen)}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className={styles.profilePic} />
-              ) : (
-                <div className={styles.profilePicFallback}>
-                  {userData?.email?.charAt(0).toUpperCase()}
-                </div>
-              )}
+    <nav className="bg-white shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link href={homePath} className="flex items-center">
+              <img src="/logo.png" alt="IIT Indore Logo" className="h-10 w-auto mr-3" />
+              <span className="text-lg font-semibold text-gray-800 hidden md:block">HMS - IIT Indore</span>
+              <span className="text-lg font-semibold text-gray-800 md:hidden">HMS</span>
+            </Link>
+          </div>
+          
+          <div className="flex items-center">
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <ul className="flex space-x-2">
+                {renderLinks()}
+              </ul>
             </div>
-            {profileOpen && (
-              <div className={styles.profileDropdown}>
-                <p className={styles.profileName}>{fullName}</p>
-                <p className={styles.profileEmail}>{userData.email}</p>
-                <button
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    setSession(null);
-                    router.push("/sign-in");
-                  }}
-                  className={styles.signOutButton}
+            
+            {/* Profile Button */}
+            {session && (
+              <div ref={profileRef} className="ml-4 relative">
+                <button 
+                  className="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out"
+                  onClick={() => setProfileOpen(!profileOpen)}
                 >
-                  Sign Out
+                  {avatarUrl ? (
+                    <img 
+                      src={avatarUrl} 
+                      alt="Profile" 
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-lg font-medium">
+                      {userData?.email?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </button>
+                
+                {/* Profile Dropdown */}
+                {profileOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                      <div className="px-4 py-3 border-b border-gray-200">
+                        <p className="text-sm font-medium text-gray-900 truncate">{fullName || "User"}</p>
+                        <p className="text-xs text-gray-600 truncate">{userData?.email}</p>
+                        <p className="text-xs text-gray-500 capitalize mt-1">Role: {role || "Unknown"}</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await supabase.auth.signOut();
+                          setSession(null);
+                          router.push("/sign-in");
+                        }}
+                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out"
+                        role="menuitem"
+                      >
+                        <FaSignOutAlt className="mr-2 text-gray-500" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+            
+            {/* Mobile menu button */}
+            <div className="flex md:hidden ml-4">
+              <button
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-blue-600 transition duration-150 ease-in-out"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Toggle menu"
+              >
+                {menuOpen ? (
+                  <FiX className="block h-6 w-6" />
+                ) : (
+                  <FiMenu className="block h-6 w-6" />
+                )}
+              </button>
+            </div>
           </div>
-        )}
-        <button
-          className={styles.hamburger}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          <FiMenu className={styles.hamburgerIcon} />
-        </button>
+        </div>
       </div>
+      
+      {/* Mobile menu, show/hide based on menu state */}
+      {menuOpen && (
+        <div ref={menuRef} className="md:hidden bg-white shadow-lg border-t z-40">
+          <ul className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {renderLinks()}
+          </ul>
+        </div>
+      )}
     </nav>
   );
 }

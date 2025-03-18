@@ -123,7 +123,6 @@ export default function StudentDashboard() {
     { title: 'Feedback', image: '/images/feedback.png', link: '/student/feedback' },
     { title: 'Academic Portal', image: '/images/academic.png', link: 'https://academic.iiti.ac.in/app/login', isExternal: true },
     { title: 'Dining Portal', image: '/images/dining.png', link: 'https://diningfee.iiti.ac.in', isExternal: true },
-    { title: 'Visitor Request', image: '/images/room-change.png', link: '/student/visitor-request' },
   ];
 
   return (
