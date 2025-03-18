@@ -70,7 +70,7 @@ export default function GuardDashboard() {
     { title: "Visitor Management", image: "/images/visitor.png", link: "/guard/visitor-management" },
     { title: "Emergency Announcements", image: "/images/emergency.png", link: "/guard/emergency-announcements" },
     { title: "Query Visitor Requests", image: "/images/query.png", link: "/guard/query-visitors" },
-    { title: "Student Data", image: "/images/students.png", link: "/guard/student-data" },
+    { title: "Status Info", image: "/images/students.png", link: "/guard/status-info" },
   ];
 
   return (
