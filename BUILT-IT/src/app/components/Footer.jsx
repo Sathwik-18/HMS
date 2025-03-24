@@ -41,8 +41,8 @@ const Footer = () => {
           <h3>Academic Links</h3>
           <ul>
             <li><Link href="https://academic.iiti.ac.in/">Academics</Link></li>
-            <li><Link href="/assets/academic-calendar.pdf">Academic Calendar</Link></li>
-            <li><Link href="/assets/holidays.pdf">Holidays</Link></li>
+            <li><Link href="/academic_calendar.pdf">Academic Calendar</Link></li>
+            <li><Link href="/holidays.pdf">Holidays</Link></li>
             <li><Link href="https://www.iiti.ac.in/page/e-payments">E-Payments</Link></li>
           </ul>
         </div>
@@ -71,6 +71,7 @@ const Footer = () => {
           <h3>Infrastructure</h3>
           <ul>
             <li><Link href="https://ido.iiti.ac.in/">Infrastructure Development Office</Link></li>
+            <li><Link href="https://academic.iiti.ac.in/New_student/ROUTE%20MAP.pdf">How to Reach Us</Link></li>
             <li><Link href="https://www.iiti.ac.in/">IIT Indore Home</Link></li>
           </ul>
         </div>
@@ -95,7 +96,7 @@ const Footer = () => {
         <div className={styles.bottomLinks}>
           <Link href="/legal-disclaimer">Legal Disclaimer</Link>
           <span className={styles.divider}>|</span>
-          <Link href="/sitemap">Sitemap</Link>
+          <Link href="https://ido.iiti.ac.in/campus.php">Sitemap</Link>
         </div>
       </div>
 
