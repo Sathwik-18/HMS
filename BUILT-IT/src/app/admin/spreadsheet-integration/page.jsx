@@ -56,7 +56,7 @@ export default function SpreadsheetUpload() {
       transition={{ duration: 0.5 }}
       style={cardStyle}
     >
-      <h2 style={headingStyle}>Spreadsheet Integration</h2>
+      <h2 style={headingStyle}>Upload Student's Data</h2>
       <p style={textStyle}>Upload a CSV file to import student records.</p>
       <input type="file" accept=".csv" onChange={handleFileChange} style={inputStyle} />
       <br />

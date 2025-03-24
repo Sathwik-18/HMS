@@ -166,7 +166,7 @@ export default function NotificationManagement() {
       <div className="bg-indigo-900 text-white py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">Notification Management</h1>
-          <p className="mt-2 text-indigo-200">Send communications to students</p>
+          {/* <p className="mt-2 text-indigo-200">Send communications to students</p> */}
         </div>
       </div>
       
@@ -397,9 +397,9 @@ export default function NotificationManagement() {
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             ID
-                          </th>
+                          </th> */}
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Subject
                           </th>
@@ -417,9 +417,9 @@ export default function NotificationManagement() {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {notificationsHistory.map(n => (
                           <tr key={n.notification_id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {n.notification_id}
-                            </td>
+                            </td> */}
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {n.subject}
                             </td>

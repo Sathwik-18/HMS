@@ -1,7 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { UserIcon, InfoIcon, CalendarIcon, XCircleIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  UserIcon,
+  InfoIcon,
+} from "lucide-react";
 
 export default function VisitorRequest() {
   const [session, setSession] = useState(null);
@@ -52,24 +58,30 @@ export default function VisitorRequest() {
     fetchStudent();
   }, [session]);
 
-  // Fetch all visitor requests for this student
-  useEffect(() => {
-    async function fetchRequests() {
-      if (student) {
-        setLoadingRequests(true);
-        try {
-          const res = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
-          const data = await res.json();
-          setRequests(data);
-        } catch (err) {
-          console.error("Error fetching visitor requests:", err);
-        } finally {
-          setLoadingRequests(false);
-        }
+  // Define fetchRequests function to fetch all columns from visitor_requests table
+  const fetchRequests = useCallback(async () => {
+    if (student) {
+      setLoadingRequests(true);
+      try {
+        const res = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
+        const data = await res.json();
+        setRequests(data);
+      } catch (err) {
+        console.error("Error fetching visitor requests:", err);
+      } finally {
+        setLoadingRequests(false);
       }
     }
+  }, [student]);
+
+  // Poll for updates every 5 seconds
+  useEffect(() => {
     fetchRequests();
-  }, [student, statusMsg]);
+    const interval = setInterval(() => {
+      fetchRequests();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [student, fetchRequests]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,10 +109,7 @@ export default function VisitorRequest() {
         setStatusMsg("Visitor request submitted successfully!");
         setVisitorName("");
         setInfo("");
-        // Refresh requests
-        const res2 = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
-        const data2 = await res2.json();
-        setRequests(data2);
+        fetchRequests();
       }
     } catch (err) {
       setStatusMsg("Error: " + err.message);
@@ -117,27 +126,53 @@ export default function VisitorRequest() {
         setStatusMsg("Error: " + data.error);
       } else {
         setStatusMsg("Visitor request cancelled successfully!");
-        // Refresh requests
-        const res2 = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
-        const data2 = await res2.json();
-        setRequests(data2);
+        fetchRequests();
       }
     } catch (err) {
       setStatusMsg("Error: " + err.message);
     }
   };
 
+  // Updated getStatusBadge to handle additional statuses "arrived" and "departured"
   const getStatusBadge = (status) => {
     const statusLower = status?.toLowerCase();
-    switch(statusLower) {
+    switch (statusLower) {
       case 'approved':
-        return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><CheckCircleIcon className="w-4 h-4 mr-1" /> Approved</span>
+        return (
+          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <CheckCircleIcon className="w-4 h-4 mr-1" /> Approved
+          </span>
+        );
       case 'pending':
-        return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><ClockIcon className="w-4 h-4 mr-1" /> Pending</span>
+        return (
+          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <ClockIcon className="w-4 h-4 mr-1" /> Pending
+          </span>
+        );
       case 'cancelled':
-        return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"><XCircleIcon className="w-4 h-4 mr-1" /> Cancelled</span>
+        return (
+          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <XCircleIcon className="w-4 h-4 mr-1" /> Cancelled
+          </span>
+        );
+      case 'arrived':
+        return (
+          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <CheckCircleIcon className="w-4 h-4 mr-1" /> Arrived
+          </span>
+        );
+      case 'departured':
+        return (
+          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+            <XCircleIcon className="w-4 h-4 mr-1" /> Departured
+          </span>
+        );
       default:
-        return <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">{status || "Unknown"}</span>
+        return (
+          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">
+            {status || "Unknown"}
+          </span>
+        );
     }
   };
 
@@ -183,12 +218,15 @@ export default function VisitorRequest() {
       <div className="bg-indigo-900 text-white py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">Visitor Request Portal</h1>
-          <p className="mt-2 text-indigo-200">Welcome, {student.name || student.full_name || `Student ${student.roll_no}`}</p>
+          <p className="mt-2 text-indigo-200">
+            Welcome, {student.name || student.full_name || `Student ${student.roll_no}`}
+          </p>
         </div>
       </div>
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form Column */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-indigo-900 px-4 py-4">
@@ -282,6 +320,7 @@ export default function VisitorRequest() {
             </div>
           </div>
 
+          {/* Requests List Column */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-indigo-900 px-4 py-4">
@@ -304,15 +343,19 @@ export default function VisitorRequest() {
                       <div key={req.request_id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
                         <div className="flex justify-between items-start">
                           <div className="flex space-x-4">
-                            <div className="text-2xl">
-                              👤
-                            </div>
+                            <div className="text-2xl">👤</div>
                             <div>
                               <h3 className="font-medium text-gray-900">
                                 {req.visitor_name}
                               </h3>
                               <p className="text-sm text-gray-500">
                                 Requested on {new Date(req.requested_on_time).toLocaleDateString()} at {new Date(req.requested_on_time).toLocaleTimeString()}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Arrival: {req.arrival_time ? new Date(req.arrival_time).toLocaleTimeString() : "Not Recorded"}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Departure: {req.departure_time ? new Date(req.departure_time).toLocaleTimeString() : "Not Recorded"}
                               </p>
                             </div>
                           </div>

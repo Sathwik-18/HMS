@@ -115,7 +115,7 @@ export default function AnalyticsDashboard() {
       <div className="bg-indigo-900 text-white py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">Analytics & Reporting Dashboard</h1>
-          <p className="mt-2 text-indigo-200">Monitor hostel occupancy and complaint resolution</p>
+          {/* <p className="mt-2 text-indigo-200">Monitor hostel occupancy and complaint resolution</p> */}
         </div>
       </div>
 

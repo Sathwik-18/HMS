@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                   {card.icon}
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-6 flex flex-col items-center justify-center text-center">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">{card.title}</h3>
                 <p className="text-gray-600">{card.description}</p>
               </div>
@@ -224,4 +224,4 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
-}
+} 

@@ -153,7 +153,7 @@ export default function MaintenanceTracking() {
       <div className="bg-indigo-900 text-white py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">Maintenance & Infrastructure Tracking</h1>
-          <p className="mt-2 text-indigo-200">Admin Dashboard</p>
+          {/* <p className="mt-2 text-indigo-200">Admin Dashboard</p> */}
         </div>
       </div>
       
