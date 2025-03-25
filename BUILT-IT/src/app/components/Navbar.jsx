@@ -2,9 +2,9 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { FaHome, FaUser, FaSignOutAlt, FaClipboardList } from "react-icons/fa";
-import { FiMenu, FiX, FiBell, FiFileText, FiUsers, FiUpload, FiTool, FiHome } from "react-icons/fi";
+import { FiMenu, FiX, FiBell, FiFileText, FiUsers, FiUpload, FiTool, FiHome, FiAlertTriangle, FiInfo } from "react-icons/fi";
 
 export default function Navbar() {
   const [session, setSession] = useState(null);
@@ -14,8 +14,19 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [homePath, setHomePath] = useState("/");
   const router = useRouter();
+  const pathname = usePathname();
   const profileRef = useRef(null);
   const menuRef = useRef(null);
+
+  // Active link styling helper function
+  const getLinkClassName = (path) => {
+    const isActive = pathname === path;
+    return `flex items-center px-4 py-2 relative ${
+      isActive 
+      ? 'text-indigo-700 border-b-2 border-indigo-900' 
+      : 'text-gray-700 hover:text-blue-600'
+    } transition duration-200`;
+    };
 
   useEffect(() => {
     async function getSession() {
@@ -101,7 +112,7 @@ export default function Navbar() {
     if (!session) {
       return (
         <li className="group">
-          <Link href="/sign-in" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+          <Link href="/sign-in" className={getLinkClassName("/sign-in")}>
             <FaUser className="mr-2" /> 
             <span>Sign In</span>
           </Link>
@@ -112,43 +123,43 @@ export default function Navbar() {
       return (
         <>
           <li className="group">
-            <Link href="/admin" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin" className={getLinkClassName("/admin")}>
               <FaHome className="mr-2" /> 
               <span>Home</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/admin/students-data" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin/students-data" className={getLinkClassName("/admin/students-data")}>
               <FiUsers className="mr-2" /> 
               <span>Data</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/admin/spreadsheet-integration" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin/spreadsheet-integration" className={getLinkClassName("/admin/spreadsheet-integration")}>
               <FiUpload className="mr-2" /> 
               <span>Upload</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/admin/maintenance-tracking" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin/maintenance-tracking" className={getLinkClassName("/admin/maintenance-tracking")}>
               <FiTool className="mr-2" /> 
               <span>Maintenance</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/admin/room-request-tracking" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin/room-request-tracking" className={getLinkClassName("/admin/room-request-tracking")}>
               <FiHome className="mr-2" /> 
               <span>Rooms</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/admin/notification-management" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin/notification-management" className={getLinkClassName("/admin/notification-management")}>
               <FiBell className="mr-2" /> 
               <span>Notifications</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/admin/feedback" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/admin/feedback" className={getLinkClassName("/admin/feedback")}>
               <FiFileText className="mr-2" /> 
               <span>Feedbacks</span>
             </Link>
@@ -159,37 +170,37 @@ export default function Navbar() {
       return (
         <>
           <li className="group">
-            <Link href="/student" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/student" className={getLinkClassName("/student")}>
               <FaHome className="mr-2" /> 
               <span>Home</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/student/profile" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/student/profile" className={getLinkClassName("/student/profile")}>
               <FaUser className="mr-2" /> 
               <span>Profile</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/student/complaints" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/student/complaints" className={getLinkClassName("/student/complaints")}>
               <FiFileText className="mr-2" /> 
               <span>Complaints</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/student/room-change-request" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/student/room-change-request" className={getLinkClassName("/student/room-change-request")}>
               <FiHome className="mr-2" /> 
               <span>Room Change</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/student/visitor-request" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/student/visitor-request" className={getLinkClassName("/student/visitor-request")}>
               <FiUsers className="mr-2" /> 
               <span>Visitor Request</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/student/feedback" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/student/feedback" className={getLinkClassName("/student/feedback")}>
               <FiFileText className="mr-2" /> 
               <span>Feedback</span>
             </Link>
@@ -200,21 +211,33 @@ export default function Navbar() {
       return (
         <>
           <li className="group">
-            <Link href="/guard" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/guard" className={getLinkClassName("/guard")}>
               <FaHome className="mr-2" /> 
               <span>Home</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/guard/check-in-out" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/guard/check-in-out" className={getLinkClassName("/guard/check-in-out")}>
               <FaClipboardList className="mr-2" /> 
               <span>Check-In/Out</span>
             </Link>
           </li>
           <li className="group">
-            <Link href="/guard/visitor-management" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+            <Link href="/guard/visitor-management" className={getLinkClassName("/guard/visitor-management")}>
               <FiUsers className="mr-2" /> 
-              <span>Visitor Management</span>
+              <span>Visitors</span>
+            </Link>
+          </li>
+          <li className="group">
+            <Link href="/guard/emergency-announcements" className={getLinkClassName("/guard/emergency-announcements")}>
+              <FiAlertTriangle className="mr-2" /> 
+              <span>Announcements</span>
+            </Link>
+          </li>
+          <li className="group">
+            <Link href="/guard/status-info" className={getLinkClassName("/guard/status-info")}>
+              <FiInfo className="mr-2" /> 
+              <span>Status Info</span>
             </Link>
           </li>
         </>
@@ -222,7 +245,7 @@ export default function Navbar() {
     } else {
       return (
         <li className="group">
-          <Link href="/" className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition duration-200">
+          <Link href="/" className={getLinkClassName("/")}>
             <FaHome className="mr-2" /> 
             <span>Home</span>
           </Link>

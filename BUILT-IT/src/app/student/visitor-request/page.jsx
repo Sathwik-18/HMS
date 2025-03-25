@@ -1,13 +1,7 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
-  UserIcon,
-  InfoIcon,
-} from "lucide-react";
+import { UserIcon, InfoIcon, CalendarIcon, XCircleIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
 
 export default function VisitorRequest() {
   const [session, setSession] = useState(null);
@@ -58,30 +52,24 @@ export default function VisitorRequest() {
     fetchStudent();
   }, [session]);
 
-  // Define fetchRequests function to fetch all columns from visitor_requests table
-  const fetchRequests = useCallback(async () => {
-    if (student) {
-      setLoadingRequests(true);
-      try {
-        const res = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
-        const data = await res.json();
-        setRequests(data);
-      } catch (err) {
-        console.error("Error fetching visitor requests:", err);
-      } finally {
-        setLoadingRequests(false);
+  // Fetch all visitor requests for this student
+  useEffect(() => {
+    async function fetchRequests() {
+      if (student) {
+        setLoadingRequests(true);
+        try {
+          const res = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
+          const data = await res.json();
+          setRequests(data);
+        } catch (err) {
+          console.error("Error fetching visitor requests:", err);
+        } finally {
+          setLoadingRequests(false);
+        }
       }
     }
-  }, [student]);
-
-  // Poll for updates every 5 seconds
-  useEffect(() => {
     fetchRequests();
-    const interval = setInterval(() => {
-      fetchRequests();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [student, fetchRequests]);
+  }, [student, statusMsg]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,7 +97,10 @@ export default function VisitorRequest() {
         setStatusMsg("Visitor request submitted successfully!");
         setVisitorName("");
         setInfo("");
-        fetchRequests();
+        // Refresh requests
+        const res2 = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
+        const data2 = await res2.json();
+        setRequests(data2);
       }
     } catch (err) {
       setStatusMsg("Error: " + err.message);
@@ -126,53 +117,45 @@ export default function VisitorRequest() {
         setStatusMsg("Error: " + data.error);
       } else {
         setStatusMsg("Visitor request cancelled successfully!");
-        fetchRequests();
+        // Refresh requests
+        const res2 = await fetch(`/api/student/visitorRequest?rollNo=${student.roll_no}`);
+        const data2 = await res2.json();
+        setRequests(data2);
       }
     } catch (err) {
       setStatusMsg("Error: " + err.message);
     }
   };
 
-  // Updated getStatusBadge to handle additional statuses "arrived" and "departured"
-  const getStatusBadge = (status) => {
-    const statusLower = status?.toLowerCase();
-    switch (statusLower) {
-      case 'approved':
-        return (
-          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
-            <CheckCircleIcon className="w-4 h-4 mr-1" /> Approved
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
-            <ClockIcon className="w-4 h-4 mr-1" /> Pending
-          </span>
-        );
-      case 'cancelled':
-        return (
-          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
-            <XCircleIcon className="w-4 h-4 mr-1" /> Cancelled
-          </span>
-        );
-      case 'arrived':
-        return (
-          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
-            <CheckCircleIcon className="w-4 h-4 mr-1" /> Arrived
-          </span>
-        );
-      case 'departured':
-        return (
-          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
-            <XCircleIcon className="w-4 h-4 mr-1" /> Departured
-          </span>
-        );
-      default:
-        return (
-          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">
-            {status || "Unknown"}
-          </span>
-        );
+  const getStatusBadge = (req) => {
+    if (req.departure_time) {
+      return (
+        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+          <CheckCircleIcon className="w-4 h-4 mr-1" />
+          Departed
+        </span>
+      );
+    } else if (req.arrival_time) {
+      return (
+        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+          <CheckCircleIcon className="w-4 h-4 mr-1" />
+          Arrived
+        </span>
+      );
+    } else if (req.status?.toLowerCase() === "cancelled") {
+      return (
+        <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+          <XCircleIcon className="w-4 h-4 mr-1" />
+          Cancelled
+        </span>
+      );
+    } else {
+      return (
+        <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+          <ClockIcon className="w-4 h-4 mr-1" />
+          Yet to Arrive
+        </span>
+      );
     }
   };
 
@@ -218,15 +201,12 @@ export default function VisitorRequest() {
       <div className="bg-indigo-900 text-white py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">Visitor Request Portal</h1>
-          <p className="mt-2 text-indigo-200">
-            Welcome, {student.name || student.full_name || `Student ${student.roll_no}`}
-          </p>
+          <p className="mt-2 text-indigo-200">Welcome, {student.name || student.full_name || `Student ${student.roll_no}`}</p>
         </div>
       </div>
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Form Column */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-indigo-900 px-4 py-4">
@@ -320,7 +300,6 @@ export default function VisitorRequest() {
             </div>
           </div>
 
-          {/* Requests List Column */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-indigo-900 px-4 py-4">
@@ -340,36 +319,42 @@ export default function VisitorRequest() {
                 ) : (
                   <div className="space-y-6">
                     {requests.map((req) => (
-                      <div key={req.request_id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                      <div key={req.request_id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
                         <div className="flex justify-between items-start">
                           <div className="flex space-x-4">
-                            <div className="text-2xl">👤</div>
+                            <div className="text-2xl">
+                              👤
+                            </div>
                             <div>
-                              <h3 className="font-medium text-gray-900">
+                              <h3 className="font-semibold text-gray-900 text-lg">
                                 {req.visitor_name}
                               </h3>
                               <p className="text-sm text-gray-500">
                                 Requested on {new Date(req.requested_on_time).toLocaleDateString()} at {new Date(req.requested_on_time).toLocaleTimeString()}
                               </p>
-                              <p className="text-sm text-gray-500">
-                                Arrival: {req.arrival_time ? new Date(req.arrival_time).toLocaleTimeString() : "Not Recorded"}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                Departure: {req.departure_time ? new Date(req.departure_time).toLocaleTimeString() : "Not Recorded"}
-                              </p>
+                              {req.arrival_time && (
+                                <p className="text-sm text-gray-500">
+                                  Arrival: {new Date(req.arrival_time).toLocaleTimeString()}
+                                </p>
+                              )}
+                              {req.departure_time && (
+                                <p className="text-sm text-gray-500">
+                                  Departure: {new Date(req.departure_time).toLocaleTimeString()}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div>
-                            {getStatusBadge(req.status || "pending")}
+                            {getStatusBadge(req)}
                           </div>
                         </div>
                         
                         <div className="mt-4">
-                          <h4 className="text-sm font-medium text-gray-700">Reason for Visit:</h4>
-                          <p className="text-gray-700 whitespace-pre-wrap mt-1">{req.info}</p>
+                          <h4 className="text-sm font-semibold text-gray-700">Reason for Visit:</h4>
+                          <p className="text-gray-600 whitespace-pre-wrap mt-1 text-sm">{req.info}</p>
                         </div>
                         
-                        {req.status !== "cancelled" && (
+                        {req.status !== "cancelled" && !req.departure_time && (
                           <div className="mt-4 flex justify-end">
                             <button
                               onClick={() => handleCancel(req.request_id)}

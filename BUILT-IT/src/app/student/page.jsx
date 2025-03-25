@@ -25,11 +25,11 @@ export default function StudentDashboard() {
   const router = useRouter();
   
   const images = [
-    '/images/apj.jpg',
-    '/images/cvr.jpg',
-    '/images/da.jpg',
-    '/images/hjb.jpg',
-    '/images/vsb.jpg',
+    '/images/pic1.png',
+    '/images/pic2.png',
+    '/images/pic3.png',
+    '/images/pic4.jpg',
+    '/images/pic5.png',
   ];
   
   const totalImages = images.length;
@@ -237,9 +237,8 @@ export default function StudentDashboard() {
               <img 
                 src={image} 
                 alt={`Campus View ${index + 1}`} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-fit"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
             </div>
           ))}
         </div>
