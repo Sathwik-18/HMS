@@ -210,7 +210,7 @@ export default function MaintenanceTracking() {
               Comprehensive maintenance management system
             </p>
           </div>
-          <Link href="/admin/dashboard" className="flex items-center px-3 py-2 rounded-md transition-colors text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200">
+          <Link href="/admin" className="flex items-center px-3 py-2 rounded-md transition-colors text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200">
             <ChevronRight className="w-5 h-5 mr-2" />
             Back to Dashboard
           </Link>
