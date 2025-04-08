@@ -17,8 +17,10 @@ import {
   ClockIcon, 
   BarChart4Icon, 
   FilterIcon,
-  MessageSquareIcon
+  MessageSquareIcon,
+  ChevronRightIcon
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -109,29 +111,29 @@ export default function AdminFeedback() {
       { 
         label: "Infrastructure", 
         data: infraAverages, 
-        backgroundColor: "rgba(255, 99, 132, 0.7)",
-        borderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(37, 99, 235, 0.7)",
+        borderColor: "rgb(37, 99, 235)",
         borderWidth: 1
       },
       { 
         label: "Technical", 
         data: technicalAverages, 
-        backgroundColor: "rgba(54, 162, 235, 0.7)",
-        borderColor: "rgb(54, 162, 235)",
+        backgroundColor: "rgba(168, 85, 247, 0.7)",
+        borderColor: "rgb(168, 85, 247)",
         borderWidth: 1
       },
       { 
         label: "Cleanliness", 
         data: cleanlinessAverages, 
-        backgroundColor: "rgba(255, 206, 86, 0.7)",
-        borderColor: "rgb(255, 206, 86)",
+        backgroundColor: "rgba(16, 185, 129, 0.7)",
+        borderColor: "rgb(16, 185, 129)",
         borderWidth: 1
       },
       { 
         label: "Overall", 
         data: overallAverages, 
-        backgroundColor: "rgba(75, 192, 192, 0.7)",
-        borderColor: "rgb(75, 192, 192)",
+        backgroundColor: "rgba(236, 72, 153, 0.7)",
+        borderColor: "rgb(236, 72, 153)",
         borderWidth: 1
       },
     ],
@@ -166,44 +168,61 @@ export default function AdminFeedback() {
       title: "Overall Rating",
       value: getAverageForCategory("overall_rating"),
       icon: <BarChart4Icon className="w-6 h-6" />,
-      color: "from-green-500 to-emerald-700"
+      color: "from-green-500 to-green-700",
+      bgGradient: "from-green-50 to-green-100",
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600"
     },
     {
       title: "Infrastructure",
       value: getAverageForCategory("infra_rating"),
       icon: <CheckCircleIcon className="w-6 h-6" />,
-      color: "from-blue-500 to-indigo-700"
+      color: "from-blue-500 to-blue-700",
+      bgGradient: "from-blue-50 to-blue-100",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600"
     },
     {
       title: "Technical",
       value: getAverageForCategory("technical_rating"),
       icon: <ClockIcon className="w-6 h-6" />,
-      color: "from-purple-500 to-violet-700"
+      color: "from-purple-500 to-purple-700",
+      bgGradient: "from-purple-50 to-purple-100",
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600"
     },
     {
       title: "Cleanliness",
       value: getAverageForCategory("cleanliness_rating"),
       icon: <PaperclipIcon className="w-6 h-6" />,
-      color: "from-pink-500 to-rose-700"
+      color: "from-pink-500 to-pink-700",
+      bgGradient: "from-pink-50 to-pink-100",
+      iconBg: "bg-pink-100",
+      iconColor: "text-pink-600"
     }
   ];
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 transition-opacity duration-300 ease-in-out opacity-100">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-lg w-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
-          <h2 className="text-red-700 text-lg font-medium flex items-center">
-            <XCircleIcon className="w-5 h-5 mr-2" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white border border-red-200 rounded-xl p-6 max-w-lg w-full shadow-xl"
+        >
+          <h2 className="text-red-700 text-xl font-bold flex items-center">
+            <XCircleIcon className="w-6 h-6 mr-2" />
             An error occurred
           </h2>
           <p className="mt-2 text-red-600">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-200"
+            className="mt-6 w-full bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
           >
             Retry
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -222,62 +241,63 @@ export default function AdminFeedback() {
   );
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition-opacity duration-300 ease-in-out opacity-100">
-      <div className="bg-white text-indigo-900 py-8 shadow-lg transition-all duration-500 ease-in-out">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl md:text-4xl font-bold flex items-center">
-            <BarChart4Icon className="mr-3 w-8 h-8" />
-            Feedback Dashboard
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-md border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+            <MessageSquareIcon className="mr-3 w-7 h-7 text-pink-600" />
+            Feedback Management
           </h1>
-          <p className="mt-2 text-indigo-900 max-w-2xl">
+          <p className="mt-1 text-gray-600 max-w-2xl">
             Monitor and analyze student feedback across different hostels and time periods
           </p>
         </div>
-      </div>
+      </header>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 py-8">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {stats.map((stat, index) => (
-            <div 
+            <motion.div 
               key={stat.title}
-              className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1"
-              style={{ 
-                animationDelay: `${index * 0.1}s`,
-                opacity: loading ? 0 : 1,
-                transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out"
-              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+              whileHover={{ scale: 1.03 }}
+              className={`bg-gradient-to-br ${stat.bgGradient} border border-gray-200 rounded-xl shadow-lg overflow-hidden`}
             >
-              <div className={`bg-gradient-to-r ${stat.color} p-4 flex justify-between items-center`}>
-                <h2 className="text-md font-semibold text-white">{stat.title}</h2>
-                <div className="bg-white bg-opacity-30 p-2 rounded-full">
-                  {stat.icon}
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className={`${stat.iconBg} ${stat.iconColor} p-3 rounded-xl shadow-md`}>
+                    {stat.icon}
+                  </div>
+                  <div className="text-4xl font-bold text-gray-800">{stat.value}</div>
+                </div>
+                <div className="flex justify-between items-end">
+                  <h2 className="text-lg font-semibold text-gray-800">{stat.title}</h2>
+                  <div className="text-xs text-gray-500">
+                    {filteredFeedbacks.length} {filteredFeedbacks.length === 1 ? 'response' : 'responses'}
+                  </div>
                 </div>
               </div>
-              <div className="p-4 flex justify-between items-center">
-                <div className="text-4xl font-bold text-gray-800">{stat.value}</div>
-                <div className="text-xs text-gray-500">
-                  {filteredFeedbacks.length} {filteredFeedbacks.length === 1 ? 'response' : 'responses'}
-                </div>
-              </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Filter Options */}
-        <div 
-          className="bg-white rounded-xl shadow-md overflow-hidden mb-8 transition-all duration-300 hover:shadow-xl"
-          style={{ 
-            opacity: loading ? 0.7 : 1,
-            transition: "opacity 0.3s ease-in-out, box-shadow 0.3s ease-in-out"
-          }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden mb-8"
         >
-          <div className="bg-gradient-to-r from-indigo-900 to-purple-900 px-4 py-4 flex items-center">
-            <FilterIcon className="w-5 h-5 mr-2 text-white" />
-            <h2 className="text-xl font-semibold text-white">Filter Options</h2>
+          <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-5 flex items-center border-b border-gray-200">
+            <FilterIcon className="w-5 h-5 mr-2 text-indigo-600" />
+            <h2 className="text-xl font-semibold text-gray-800">Filter Options</h2>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
                   label: "Month",
@@ -307,20 +327,14 @@ export default function AdminFeedback() {
                   ]
                 }
               ].map((filter, index) => (
-                <div 
-                  key={filter.label}
-                  style={{ 
-                    animationDelay: `${index * 0.1}s`,
-                    transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out"
-                  }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div key={filter.label}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     {filter.label}
                   </label>
                   <select
                     value={filter.value}
                     onChange={filter.onChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+                    className="w-full border border-gray-300 bg-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   >
                     {filter.options.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -332,41 +346,34 @@ export default function AdminFeedback() {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Weekly Ratings Overview */}
-          <div 
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
             className="lg:col-span-2"
-            style={{ 
-              opacity: loading ? 0.7 : 1,
-              transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out"
-            }}
           >
-            <div className="bg-white rounded-xl shadow-md overflow-hidden h-full transition-all duration-300 hover:shadow-xl">
-              <div className="bg-gradient-to-r from-indigo-900 to-purple-900 px-4 py-4 flex items-center">
-                <BarChart4Icon className="w-5 h-5 mr-2 text-white" />
-                <h2 className="text-xl font-semibold text-white">Weekly Ratings Overview</h2>
+            <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden h-full">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-5 flex items-center border-b border-gray-200">
+                <BarChart4Icon className="w-5 h-5 mr-2 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-800">Weekly Ratings Overview</h2>
               </div>
               <div className="p-6">
                 {loading ? (
-                  <div 
-                    className="flex justify-center items-center h-64"
-                  >
+                  <div className="flex justify-center items-center h-64">
                     <div className="w-12 h-12 border-4 border-t-4 border-t-indigo-600 border-gray-200 rounded-full animate-spin"></div>
                   </div>
                 ) : weeks.length === 0 ? (
-                  <div 
-                    className="text-center py-16 transition-all duration-300 ease-in-out"
-                  >
+                  <div className="text-center py-16">
                     <div className="text-5xl mb-4">📊</div>
                     <h3 className="text-xl font-medium text-gray-700">No data available</h3>
                     <p className="text-gray-500 mt-2">No feedback found for the selected filters.</p>
                   </div>
                 ) : (
-                  <div 
-                    className="h-80 transition-opacity duration-300 ease-in-out"
-                  >
+                  <div className="h-80">
                     <Bar 
                       data={chartData} 
                       options={{ 
@@ -375,11 +382,32 @@ export default function AdminFeedback() {
                         plugins: {
                           legend: {
                             position: 'top',
+                            labels: {
+                              font: {
+                                family: 'Inter, system-ui, sans-serif',
+                                size: 11
+                              },
+                              boxWidth: 15,
+                              padding: 15
+                            }
                           },
                           title: {
                             display: false,
                           },
                           tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            bodyFont: {
+                              family: 'Inter, system-ui, sans-serif'
+                            },
+                            titleFont: {
+                              family: 'Inter, system-ui, sans-serif',
+                              weight: 'bold'
+                            },
+                            padding: 12,
+                            borderColor: 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1,
                             callbacks: {
                               title: (tooltipItems) => {
                                 return tooltipItems[0].label;
@@ -395,7 +423,23 @@ export default function AdminFeedback() {
                             beginAtZero: true,
                             max: 5,
                             ticks: {
-                              stepSize: 1
+                              stepSize: 1,
+                              font: {
+                                family: 'Inter, system-ui, sans-serif'
+                              }
+                            },
+                            grid: {
+                              color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                          },
+                          x: {
+                            ticks: {
+                              font: {
+                                family: 'Inter, system-ui, sans-serif'
+                              }
+                            },
+                            grid: {
+                              display: false
                             }
                           }
                         }
@@ -405,21 +449,22 @@ export default function AdminFeedback() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
           
           {/* Feedback Details */}
-          <div 
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
             className="lg:col-span-3"
-            style={{ 
-              opacity: loading ? 0.7 : 1,
-              transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out"
-            }}
           >
-            <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl">
-              <div className="bg-gradient-to-r from-indigo-900 to-purple-900 px-4 py-4 flex items-center">
-                <MessageSquareIcon className="w-5 h-5 mr-2 text-white" />
-                <h2 className="text-xl font-semibold text-white">Feedback Details</h2>
-                <span className="ml-2 bg-white bg-opacity-20 text-black text-xs px-2 py-1 rounded-full font-bold">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-5 flex items-center justify-between border-b border-gray-200">
+                <div className="flex items-center">
+                  <MessageSquareIcon className="w-5 h-5 mr-2 text-pink-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Feedback Details</h2>
+                </div>
+                <span className="bg-pink-100 text-pink-800 text-xs px-3 py-1 rounded-full font-medium">
                   {filteredFeedbacks.length} items
                 </span>
               </div>
@@ -429,28 +474,27 @@ export default function AdminFeedback() {
                     <LoadingSkeleton />
                   </div>
                 ) : filteredFeedbacks.length === 0 ? (
-                  <div 
-                    className="text-center py-16 transition-all duration-300 ease-in-out"
-                  >
+                  <div className="text-center py-16">
                     <div className="text-5xl mb-4">📋</div>
                     <h3 className="text-xl font-medium text-gray-700">No feedback found</h3>
                     <p className="text-gray-500 mt-2">Try adjusting your filters to see more results.</p>
                   </div>
                 ) : (
-                  <div 
-                    className="overflow-x-auto transition-opacity duration-300 ease-in-out"
-                  >
+                  <div className="overflow-x-auto">
                     {/* Mobile card view for small screens */}
                     <div className="block md:hidden space-y-4">
                       {filteredFeedbacks.map((fb, index) => (
-                        <div 
+                        <motion.div 
                           key={fb.feedback_id || index}
-                          className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
-                          style={{ animationDelay: `${index * 0.05}s` }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05, duration: 0.3 }}
+                          whileHover={{ scale: 1.02 }}
+                          className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl overflow-hidden shadow-md"
                         >
-                          <div className="bg-gray-50 px-4 py-2 flex justify-between items-center">
+                          <div className="bg-white px-4 py-3 flex justify-between items-center border-b border-gray-200">
                             <div>
-                              <span className="font-medium">{fb.hostel_block || "Unknown"}</span>
+                              <span className="font-medium text-gray-800">{fb.hostel_block || "Unknown"}</span>
                               <span className="mx-2 text-gray-400">•</span>
                               <span className="text-sm text-gray-500">{fb.feedback_week || "Unknown"}</span>
                             </div>
@@ -460,31 +504,31 @@ export default function AdminFeedback() {
                           </div>
                           <div className="p-4">
                             <p className="whitespace-pre-wrap text-sm text-gray-700 mb-4">{fb.feedback_text}</p>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Infra:</span>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex items-center justify-between bg-blue-50 p-2 rounded-lg">
+                                <span className="text-xs font-medium text-blue-800">Infra:</span>
                                 {getRatingBadge(fb.infra_rating)}
                               </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Technical:</span>
+                              <div className="flex items-center justify-between bg-purple-50 p-2 rounded-lg">
+                                <span className="text-xs font-medium text-purple-800">Technical:</span>
                                 {getRatingBadge(fb.technical_rating)}
                               </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Clean:</span>
+                              <div className="flex items-center justify-between bg-green-50 p-2 rounded-lg">
+                                <span className="text-xs font-medium text-green-800">Clean:</span>
                                 {getRatingBadge(fb.cleanliness_rating)}
                               </div>
-                              <div className="flex items-center justify-between font-medium">
-                                <span className="text-xs text-gray-900">Overall:</span>
+                              <div className="flex items-center justify-between bg-pink-50 p-2 rounded-lg">
+                                <span className="text-xs font-medium text-pink-800">Overall:</span>
                                 {getRatingBadge(fb.overall_rating)}
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                     
                     {/* Table view for larger screens */}
-                    <table className="w-full border-collapse hidden md:table">
+                    <table className="w-full hidden md:table">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
@@ -494,48 +538,56 @@ export default function AdminFeedback() {
                           <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-gray-200 bg-white">
                         {filteredFeedbacks.map((fb, index) => (
-                          <tr 
+                          <motion.tr 
                             key={fb.feedback_id || index}
-                            className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-50 transition-colors duration-150 cursor-pointer`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: index * 0.03, duration: 0.3 }}
+                            whileHover={{ backgroundColor: "rgba(243, 244, 246, 1)" }}
+                            className="cursor-pointer group"
                             onClick={() => setActiveFeedback(activeFeedback === index ? null : index)}
-                            style={{ animationDelay: `${index * 0.05}s` }}
                           >
                             <td className="py-4 px-4 text-sm text-gray-900">
-                              <p className={`whitespace-pre-wrap ${activeFeedback === index ? '' : 'line-clamp-2'}`}>
-                                {fb.feedback_text}
-                              </p>
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 text-gray-400 group-hover:text-indigo-600 transition-colors">
+                                  <ChevronRightIcon className={`w-5 h-5 transform transition-transform ${activeFeedback === index ? 'rotate-90' : ''}`} />
+                                </div>
+                                <p className={`whitespace-pre-wrap ml-2 ${activeFeedback === index ? '' : 'line-clamp-2'}`}>
+                                  {fb.feedback_text}
+                                </p>
+                              </div>
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex flex-col items-center space-y-2">
-                                <div className="flex items-center">
-                                  <span className="w-20 text-xs text-gray-500">Infra:</span>
+                                <div className="flex items-center w-full bg-blue-50 p-1 rounded-md">
+                                  <span className="w-20 text-xs font-medium text-blue-800">Infra:</span>
                                   {getRatingBadge(fb.infra_rating)}
                                 </div>
-                                <div className="flex items-center">
-                                  <span className="w-20 text-xs text-gray-500">Technical:</span>
+                                <div className="flex items-center w-full bg-purple-50 p-1 rounded-md">
+                                  <span className="w-20 text-xs font-medium text-purple-800">Technical:</span>
                                   {getRatingBadge(fb.technical_rating)}
                                 </div>
-                                <div className="flex items-center">
-                                  <span className="w-20 text-xs text-gray-500">Clean:</span>
+                                <div className="flex items-center w-full bg-green-50 p-1 rounded-md">
+                                  <span className="w-20 text-xs font-medium text-green-800">Clean:</span>
                                   {getRatingBadge(fb.cleanliness_rating)}
                                 </div>
-                                <div className="flex items-center font-medium">
-                                  <span className="w-20 text-xs text-gray-900">Overall:</span>
+                                <div className="flex items-center w-full bg-pink-50 p-1 rounded-md">
+                                  <span className="w-20 text-xs font-medium text-pink-800">Overall:</span>
                                   {getRatingBadge(fb.overall_rating)}
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 px-4 text-sm text-gray-500">{fb.feedback_week || "Unknown"}</td>
-                            <td className="py-4 px-4 text-sm text-gray-500">{fb.hostel_block || "Unknown"}</td>
-                            <td className="py-4 px-4 text-sm text-gray-500">
+                            <td className="py-4 px-4 text-sm font-medium text-gray-700">{fb.feedback_week || "Unknown"}</td>
+                            <td className="py-4 px-4 text-sm font-medium text-gray-700">{fb.hostel_block || "Unknown"}</td>
+                            <td className="py-4 px-4 text-sm text-gray-700">
                               {new Date(fb.created_at).toLocaleDateString()}
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-gray-500">
                                 {new Date(fb.created_at).toLocaleTimeString()}
                               </div>
                             </td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </tbody>
                     </table>
@@ -543,14 +595,19 @@ export default function AdminFeedback() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
         
         {/* Footer with information */}
-        <div className="mt-8 text-center text-gray-500 text-sm">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="mt-8 text-center text-gray-500 text-sm border-t border-gray-200 pt-6"
+        >
           <p>Feedback Dashboard v2.0 | Last updated: {new Date().toLocaleDateString()}</p>
           <p className="mt-1">Total feedbacks: {feedbacks.length} | Filtered results: {filteredFeedbacks.length}</p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

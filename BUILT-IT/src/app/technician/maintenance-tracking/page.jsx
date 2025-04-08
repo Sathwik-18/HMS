@@ -38,7 +38,7 @@ export default function MaintenanceTracking() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch complaints and students data in parallel
+        // Fetch technical complaints and students data in parallel
         const [complaintsRes, studentsRes] = await Promise.all([
           fetch("/api/admin/maintenance"),
           fetch("/api/admin/students")
@@ -63,7 +63,13 @@ export default function MaintenanceTracking() {
           };
         });
         
-        setComplaints(enhancedComplaints);
+        // Filter only technical complaints - this is redundant if API already filters,
+        // but keeping it as a safety measure in case API changes
+        const technicalComplaints = enhancedComplaints.filter(complaint => 
+          complaint.type === 'technical'
+        );
+        
+        setComplaints(technicalComplaints);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -78,7 +84,7 @@ export default function MaintenanceTracking() {
     ? complaints.filter((comp) => comp.hostel_block === selectedHostel)
     : complaints;
 
-  // Compute summary counts for bar graph
+  // Compute summary counts for bar graph - technical complaints only
   const summary = filteredComplaints.reduce(
     (acc, comp) => {
       if (comp.status === "pending") acc.pending++;
@@ -92,7 +98,7 @@ export default function MaintenanceTracking() {
   const chartData = {
     labels: ["Pending", "In Progress", "Completed"],
     datasets: [{
-      label: "Complaints",
+      label: "Technical Complaints",
       data: [summary.pending, summary.inProgress, summary.completed],
       backgroundColor: ["#FFCE56", "#4F46E5", "#10B981"],
     }],
@@ -189,7 +195,7 @@ export default function MaintenanceTracking() {
             <Wrench className="w-12 h-12 text-blue-600" />
           </motion.div>
           <p className={`mt-4 ${textColors.description}`}>
-            Loading maintenance tasks...
+            Loading technical maintenance tasks...
           </p>
         </div>
       </div>
@@ -204,10 +210,10 @@ export default function MaintenanceTracking() {
           <div>
             <h1 className={`text-2xl font-bold ${textColors.title} flex items-center`}>
               <Wrench className="w-7 h-7 mr-3 text-red-600" />
-              Maintenance Tracking
+              Technical Maintenance Tracking
             </h1>
             <p className={`text-sm ${textColors.description}`}>
-              Comprehensive maintenance management system
+              Technical complaints management system
             </p>
           </div>
           <Link href="/admin/dashboard" className="flex items-center px-3 py-2 rounded-md transition-colors text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200">
@@ -229,7 +235,7 @@ export default function MaintenanceTracking() {
             >
               <div className="bg-gradient-to-r from-red-50 to-red-100 px-6 py-4 rounded-t-xl flex justify-between items-center">
                 <h2 className={`text-xl font-semibold ${textColors.title}`}>
-                  Complaint Records
+                  Technical Complaint Records
                 </h2>
                 <select 
                   value={selectedHostel} 
@@ -262,8 +268,8 @@ export default function MaintenanceTracking() {
                       <tr>
                         <td colSpan="6" className="px-6 py-16 text-center text-gray-500">
                           <div className="text-5xl mb-4">📋</div>
-                          <h3 className="text-xl font-medium text-gray-700">No complaints found</h3>
-                          <p className="text-gray-500 mt-2">No complaints match the current filter.</p>
+                          <h3 className="text-xl font-medium text-gray-700">No technical complaints found</h3>
+                          <p className="text-gray-500 mt-2">No technical complaints match the current filter.</p>
                         </td>
                       </tr>
                     ) : (
@@ -299,7 +305,7 @@ export default function MaintenanceTracking() {
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700">
                             <div className="max-w-xs truncate">{complaint.description}</div>
-                            <div className="text-xs text-gray-500 mt-1">Type: {complaint.type}</div>
+                            <div className="text-xs text-gray-500 mt-1">Type: Technical</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {getStatusBadge(complaint.status)}
@@ -328,7 +334,7 @@ export default function MaintenanceTracking() {
           
           {/* Right Column - Stats */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Complaints Overview */}
+            {/* Technical Complaints Overview */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -336,7 +342,7 @@ export default function MaintenanceTracking() {
               className={`${cardBg} rounded-xl shadow-lg border`}
             >
               <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 px-6 py-4 rounded-t-xl">
-                <h2 className={`text-xl font-semibold ${textColors.title}`}>Complaints Overview</h2>
+                <h2 className={`text-xl font-semibold ${textColors.title}`}>Technical Complaints Overview</h2>
               </div>
               <div className="p-6">
                 <div className="h-64">
@@ -369,7 +375,7 @@ export default function MaintenanceTracking() {
               </div>
             </motion.div>
             
-            {/* Hostel Distribution */}
+            {/* Hostel Distribution - Technical Complaints */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -377,7 +383,7 @@ export default function MaintenanceTracking() {
               className={`${cardBg} rounded-xl shadow-lg border`}
             >
               <div className="bg-gradient-to-r from-green-50 to-green-100 px-6 py-4 rounded-t-xl">
-                <h2 className={`text-xl font-semibold ${textColors.title}`}>Hostel Distribution</h2>
+                <h2 className={`text-xl font-semibold ${textColors.title}`}>Technical Complaints by Hostel</h2>
               </div>
               <div className="p-6">
                 <ul className="space-y-2">
@@ -426,7 +432,7 @@ export default function MaintenanceTracking() {
             className={`${cardBg} rounded-xl shadow-2xl w-full max-w-md`}
           >
             <div className="bg-gradient-to-r from-red-500 to-red-700 text-white px-6 py-4 rounded-t-xl">
-              <h3 className="text-xl font-medium">Update Complaint #{editingComplaint.complaint_id}</h3>
+              <h3 className="text-xl font-medium">Update Technical Complaint #{editingComplaint.complaint_id}</h3>
             </div>
             <form onSubmit={handleUpdate} className="p-6">
               <div className="space-y-4">

@@ -59,7 +59,7 @@ export default function NotificationManagement() {
 
   // Compose State
   const [filters, setFilters] = useState({
-    batch: "", dept: "", hostel: "", room: "", floor: ""
+    batch: "", dept: "", hostel: "", room: "", Floor_no: "", unitno: "" // Uses Floor_no from schema
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipients, setSelectedRecipients] = useState([]);
@@ -84,6 +84,7 @@ export default function NotificationManagement() {
         const [studentsRes, notificationsRes] = await Promise.all([
           fetch("/api/admin/students"), // Replace with your actual API endpoint
           fetch("/api/notifications")   // Replace with your actual API endpoint
+          
         ]);
 
         if (!studentsRes.ok) throw new Error(`Failed to fetch students: ${studentsRes.statusText}`);
@@ -108,23 +109,94 @@ export default function NotificationManagement() {
     fetchData();
   }, []); // Runs once on mount
 
-  // Filter students based on filters and search query
+  // Filter students based on filters and search query (Main filtering logic)
   useEffect(() => {
     const filtered = students.filter(student => {
       // Basic check if student object and properties exist
       if (!student || typeof student.full_name !== 'string') return false;
 
+      // Convert filter values to strings for consistent comparison, handle potential null/undefined student properties
+      const studentBatch = student.batch != null ? String(student.batch) : null;
+      const studentFloor = student.Floor_no != null ? String(student.Floor_no) : null; // Use Floor_no
+      const studentUnit = student.unit_no != null ? String(student.unit_no) : null; // Use unit_no from student data
+
       return (
-        (!filters.batch || String(student.batch) === filters.batch) &&
+        (!filters.batch || studentBatch === filters.batch) &&
         (!filters.dept || student.department === filters.dept) &&
         (!filters.hostel || student.hostel_block === filters.hostel) &&
         (!filters.room || student.room_number === filters.room) &&
-        (!filters.floor || String(student.floor) === filters.floor) &&
+        (!filters.Floor_no || studentFloor === filters.Floor_no) && // Filter by Floor_no
+        (!filters.unitno || studentUnit === filters.unitno) && // Compare with selected unitno filter
         student.full_name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
     setFilteredStudents(filtered);
-  }, [students, filters, searchQuery]);
+  }, [students, filters, searchQuery]); // Dependencies include filters object
+
+  // Get unique values for general filter dropdowns (excluding unitno now)
+  const uniqueValues = useCallback((key, transform = v => v) => {
+    const values = students
+      .map(s => s && s[key] != null ? transform(s[key]) : null) // Handle potential null/undefined/0 values explicitly
+      .filter(v => v !== null && v !== undefined); // Remove null/undefined
+    return [...new Set(values)].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true })); // Sort alphabetically/numerically
+  }, [students]);
+
+
+  // --- START: Dependent Filter Logic ---
+
+  // Calculate available Unit Numbers based on selected Floor Number
+  const availableUnitNos = useMemo(() => {
+    if (!filters.Floor_no) {
+      // If no floor is selected, return all unique unit numbers
+      return uniqueValues('unit_no');
+    }
+
+    try {
+        const selectedFloor = parseInt(filters.Floor_no, 10);
+        if (isNaN(selectedFloor)) {
+            // Handle cases where Floor_no might not be a number unexpectedly
+            console.warn(`Invalid Floor_no selected: ${filters.Floor_no}`);
+            return uniqueValues('unit_no');
+        }
+
+        const targetHundredDigit = selectedFloor + 1;
+
+        const unitsForFloor = students
+            .filter(student => student && String(student.Floor_no) === filters.Floor_no) // Get students on the selected floor
+            .map(student => student.unit_no) // Get their unit numbers
+            .filter(unit => unit != null) // Remove null/undefined units
+            .filter(unit => {
+                const unitNum = parseInt(unit, 10);
+                // Check if unit is a valid number and calculate its hundreds digit
+                return !isNaN(unitNum) && Math.floor(unitNum / 100) === targetHundredDigit;
+            })
+            .map(String); // Convert back to string for consistency if needed
+
+        // Return unique, sorted unit numbers matching the criteria
+        return [...new Set(unitsForFloor)].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
+
+    } catch (error) {
+        console.error("Error calculating available unit numbers:", error);
+        // Fallback to all unique unit numbers in case of an error
+        return uniqueValues('unit_no');
+    }
+
+  }, [filters.Floor_no, students, uniqueValues]); // Dependencies: floor filter, student list, and the uniqueValues function itself
+
+  // Effect to reset unitno filter if the selected floor changes and makes the unit invalid
+  useEffect(() => {
+    // Check if a unit is selected AND if that unit is NOT in the newly calculated available list
+    if (filters.unitno && !availableUnitNos.includes(filters.unitno)) {
+      // Reset the unit filter because the current selection is invalid for the chosen floor
+      setFilters(prevFilters => ({ ...prevFilters, unitno: "" }));
+    }
+    // This effect should ONLY re-run when availableUnitNos changes.
+    // Adding filters.unitno to dependencies can lead to unnecessary re-renders or potential loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableUnitNos]);
+
+  // --- END: Dependent Filter Logic ---
+
 
   // Apply template content
   const applyTemplate = (templateKey) => {
@@ -143,12 +215,11 @@ export default function NotificationManagement() {
     e.preventDefault();
     if (!form.subject.trim() || !form.message.trim() || !selectedRecipients.length) {
       setSendStatus({ type: 'error', message: 'Subject, message, and recipients are required.' });
-      // No auto-dismiss for validation errors - let user fix them
       return;
     }
 
-    setSending(true); // Start loading state
-    setSendStatus(null); // Clear previous status
+    setSending(true);
+    setSendStatus(null);
 
     try {
       const res = await fetch("/api/notifications", { // Replace with your actual API endpoint
@@ -161,56 +232,40 @@ export default function NotificationManagement() {
         })
       });
 
-      // Check for non-OK response status (like 4xx, 5xx)
       if (!res.ok) {
         let errorMsg = `Failed to send notification: ${res.statusText}`;
-        try {
-          const errorData = await res.json();
-          errorMsg = errorData.error || errorData.message || errorMsg; // Use backend error message if available
-        } catch (parseError) {
-          // Ignore if response is not JSON
-        }
+        try { const errorData = await res.json(); errorMsg = errorData.error || errorData.message || errorMsg; }
+        catch (parseError) { /* Ignore */ }
         throw new Error(errorMsg);
       }
 
       const data = await res.json();
-      // Assuming backend returns { success: true, notification: {...} } or { success: false, error: "..." }
       if (data.success && data.notification) {
         setSendStatus({ type: 'success', message: 'Notification sent successfully!' });
-        setForm({ subject: "", message: "" }); // Reset form
-        setSelectedRecipients([]); // Clear recipients
-        setNotifications(prev => [data.notification, ...prev]); // Add to history
-        // Optional: Auto dismiss success message after 5 seconds
-        // setTimeout(() => setSendStatus(null), 5000);
+        setForm({ subject: "", message: "" });
+        setSelectedRecipients([]);
+        setNotifications(prev => [data.notification, ...prev]);
       } else {
-         // Use specific error from backend if available, otherwise generic
         setSendStatus({ type: 'error', message: data.error || 'An unknown error occurred.' });
       }
     } catch (error) {
       console.error("Send notification error:", error);
-      // Show network or specific error message
       setSendStatus({ type: 'error', message: error.message || 'Network error. Please try again.' });
-       // Optional: Auto dismiss error message after 5 seconds
-      // setTimeout(() => setSendStatus(null), 5000);
     } finally {
-      setSending(false); // End loading state
+      setSending(false);
     }
   };
 
   // Filter notification history
   const filteredHistory = useMemo(() => {
     return notifications.filter(notification => {
-      if (!notification || !notification.sent_at) return false; // Basic validation
+      if (!notification || !notification.sent_at) return false;
 
       const date = new Date(notification.sent_at);
-      // Ensure dates are valid before comparing
-      // *** FIXED: Changed const to let to allow reassignment ***
       let start = historyFilters.start ? new Date(historyFilters.start) : null;
       let end = historyFilters.end ? new Date(historyFilters.end) : null;
-      if (start && isNaN(start.getTime())) start = null; // Invalidate if date parsing failed
-      if (end && isNaN(end.getTime())) end = null;      // Invalidate if date parsing failed
-
-      // Adjust end date to include the whole day
+      if (start && isNaN(start.getTime())) start = null;
+      if (end && isNaN(end.getTime())) end = null;
       if (end) end.setHours(23, 59, 59, 999);
 
       const matchesDate = (!start || date >= start) && (!end || date <= end);
@@ -222,20 +277,11 @@ export default function NotificationManagement() {
     });
   }, [notifications, historyFilters]);
 
-  // Get unique values for filter dropdowns
-  const uniqueValues = useCallback((key, transform = v => v) => {
-    const values = students
-      .map(s => s && s[key] ? transform(s[key]) : null) // Handle potential undefined values
-      .filter(Boolean); // Remove null/undefined
-    return [...new Set(values)].sort((a, b) => String(a).localeCompare(String(b))); // Sort alphabetically/numerically
-  }, [students]);
-
 
   // Reset compose filters and search
   const resetFilters = () => {
-    setFilters({ batch: "", dept: "", hostel: "", room: "", floor: "" });
+    setFilters({ batch: "", dept: "", hostel: "", room: "", Floor_no: "", unitno: "" }); // Resets Floor_no and unitno
     setSearchQuery("");
-    // No need to clear selected recipients here, maybe add a separate button?
   };
 
   // Clear selected recipients
@@ -328,7 +374,6 @@ export default function NotificationManagement() {
         <AnimatePresence mode="wait">
           {activeTab === 'compose' ? (
             // Compose Tab Content
-            // SUGGESTION: Extract this motion.div block into a <ComposeTab /> component
             <motion.div
               key="compose"
               initial="hidden"
@@ -338,7 +383,6 @@ export default function NotificationManagement() {
               className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8"
             >
               {/* Compose Form Section */}
-              {/* SUGGESTION: Extract this motion.div into a <NotificationForm /> component */}
               <motion.div
                 variants={slideUp}
                 className="lg:col-span-4 bg-white rounded-lg shadow border border-gray-200 p-5 md:p-6"
@@ -423,7 +467,6 @@ export default function NotificationManagement() {
                   </div>
 
                   {/* Selected Recipients Display */}
-                  {/* SUGGESTION: Extract into a <SelectedRecipients /> component */}
                   <div className="bg-indigo-50 p-3 rounded-md border border-indigo-100">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
@@ -500,14 +543,13 @@ export default function NotificationManagement() {
                   </motion.button>
 
                    {/* Send Status Message */}
-                   {/* SUGGESTION: Use aria-live="polite" for screen readers */}
                   <AnimatePresence>
                     {sendStatus && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        // role="alert" // Add role="alert" for better accessibility
+                        role="alert" // Add role="alert" for better accessibility
                         className={`p-3 rounded-md flex items-start gap-2 text-sm border ${
                           sendStatus.type === 'success'
                             ? 'bg-green-50 text-green-800 border-green-200'
@@ -531,7 +573,6 @@ export default function NotificationManagement() {
               </motion.div>
 
               {/* Recipient Management Section */}
-              {/* SUGGESTION: Extract into a <RecipientManager /> component */}
               <motion.div
                 variants={slideUp}
                 className="lg:col-span-8 bg-white rounded-lg shadow border border-gray-200 p-5 md:p-6"
@@ -569,7 +610,6 @@ export default function NotificationManagement() {
                     <button
                       onClick={() => {
                         const allFilteredEmails = filteredStudents.map(s => s.email);
-                        // If all currently filtered are selected, deselect them. Otherwise, select all filtered.
                         const areAllFilteredSelected = filteredStudents.length > 0 && selectedRecipients.length === allFilteredEmails.length && allFilteredEmails.every(email => selectedRecipients.includes(email));
                         setSelectedRecipients(areAllFilteredSelected ? [] : allFilteredEmails);
                       }}
@@ -584,7 +624,6 @@ export default function NotificationManagement() {
                 </div>
 
                  {/* Filters Section */}
-                 {/* SUGGESTION: Extract into a <FilterControls /> component */}
                 <div>
                     {/* Mobile Filters Panel */}
                     <AnimatePresence>
@@ -598,7 +637,8 @@ export default function NotificationManagement() {
                           className="md:hidden border-t border-b border-gray-200 my-4 py-4 overflow-hidden"
                         >
                           <div className="grid grid-cols-2 gap-3">
-                            {/* Simplified filters for mobile example */}
+                            {/* --- START MOBILE FILTER CHANGES --- */}
+                            {/* Batch, Dept using uniqueValues */}
                              <select value={filters.batch} onChange={e => setFilters({...filters, batch: e.target.value})} className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
                                <option value="">All Batches</option>
                                {uniqueValues('batch').map(batch => <option key={batch} value={batch}>{batch}</option>)}
@@ -607,6 +647,31 @@ export default function NotificationManagement() {
                                <option value="">All Departments</option>
                                {uniqueValues('department').map(dept => <option key={dept} value={dept}>{dept}</option>)}
                              </select>
+
+                            {/* Floor filter using uniqueValues */}
+                            <select value={filters.Floor_no} onChange={e => setFilters({...filters, Floor_no: e.target.value})} className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                               <option value="">All Floors</option>
+                               {uniqueValues('Floor_no').map(floor => <option key={floor} value={floor}>{`Floor ${floor}`}</option>)}
+                            </select>
+
+                            {/* Unit No filter (uses availableUnitNos) */}
+                            <select
+                               value={filters.unitno}
+                               onChange={e => setFilters({...filters, unitno: e.target.value})}
+                               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                               disabled={!filters.Floor_no && availableUnitNos.length === 0} // Optional: disable if no floor selected and no units available
+                            >
+                               <option value="">All Units</option>
+                               {availableUnitNos.map(unit => <option key={unit} value={unit}>{`Unit ${unit}`}</option>)}
+                            </select>
+
+                            {/* Room filter using uniqueValues */}
+                            <select value={filters.room} onChange={e => setFilters({...filters, room: e.target.value})} className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                               <option value="">All Rooms</option>
+                               {uniqueValues('room_number').map(room => <option key={room} value={room}>{`Room ${room}`}</option>)}
+                            </select>
+
+                            {/* Search */}
                              <input
                               type="text"
                               placeholder="Search students..."
@@ -614,6 +679,7 @@ export default function NotificationManagement() {
                               onChange={(e) => debouncedSetSearchQuery(e.target.value)}
                               className="col-span-2 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                              />
+                            {/* --- END MOBILE FILTER CHANGES --- */}
                           </div>
                         </motion.div>
                       )}
@@ -622,45 +688,90 @@ export default function NotificationManagement() {
                      {/* Desktop Filters */}
                     <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-5">
                         {/* Select filters */}
+                         {/* --- START DESKTOP FILTER CHANGES --- */}
+                        {/* Batch, Dept, Hostel (using uniqueValues) */}
                         {[
-                          { key: 'batch', label: 'All Batches', transform: (v) => v },
-                          { key: 'department', label: 'All Departments', transform: (v) => v },
-                          { key: 'hostel_block', label: 'All Hostels', transform: (v) => `Block ${v}` },
-                          { key: 'floor', label: 'All Floors', transform: (v) => `Floor ${v}` },
-                          { key: 'room_number', label: 'All Rooms', transform: (v) => `Room ${v}` },
+                          { key: 'batch', stateKey: 'batch', label: 'All Batches', transform: (v) => v },
+                          { key: 'department', stateKey: 'dept', label: 'All Departments', transform: (v) => v },
+                          { key: 'hostel_block', stateKey: 'hostel', label: 'All Hostels', transform: (v) => `Block ${v}` },
                         ].map(filter => (
                           <select
                             key={filter.key}
-                            value={filters[filter.key.split('_')[0]]} // Use simplified key for state
-                            onChange={e => setFilters({ ...filters, [filter.key.split('_')[0]]: e.target.value })}
+                            value={filters[filter.stateKey]} // Use defined stateKey
+                            onChange={e => setFilters({ ...filters, [filter.stateKey]: e.target.value })}
                             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm bg-white appearance-none"
-                            aria-label={`Filter by ${filter.key.replace('_', ' ')}`}
-                          >
-                            <option value="">{filter.label}</option>
-                            {uniqueValues(filter.key).map(value => (
-                              <option key={value} value={value}>{filter.transform(value)}</option>
-                            ))}
-                          </select>
+                            aria-label={`Filter by ${filter.label.replace('All ', '')}`}
+                           >
+                             <option value="">{filter.label}</option>
+                             {uniqueValues(filter.key).map(value => (
+                               <option key={value} value={value}>{filter.transform(value)}</option>
+                             ))}
+                           </select>
                         ))}
 
-                         {/* Search Input with Debounce */}
-                        <div className="relative md:col-span-2 lg:col-span-2 xl:col-span-1">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                            <input
-                              type="text"
-                              placeholder="Search students..."
-                              defaultValue={searchQuery} // Use defaultValue with debounce
-                              onChange={(e) => debouncedSetSearchQuery(e.target.value)}
-                              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm"
-                              aria-label="Search students by name"
-                            />
-                        </div>
+                       {/* Floor filter (using uniqueValues) */}
+                       <select
+                         key='Floor_no'
+                         value={filters.Floor_no}
+                         onChange={e => setFilters({ ...filters, Floor_no: e.target.value })} // Updates Floor_no correctly
+                         className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm bg-white appearance-none"
+                         aria-label={`Filter by Floor`}
+                        >
+                         <option value="">All Floors</option>
+                         {/* Uses correct key ('Floor_no') for uniqueValues */}
+                         {uniqueValues('Floor_no').map(value => (
+                           <option key={value} value={value}>{`Floor ${value}`}</option>
+                         ))}
+                       </select>
+
+                       {/* Unit No filter (uses availableUnitNos) */}
+                       <select
+                         key='unit_no'
+                         value={filters.unitno}
+                         onChange={e => setFilters({ ...filters, unitno: e.target.value })}
+                         className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm bg-white appearance-none"
+                         aria-label={`Filter by Unit No`}
+                         disabled={!filters.Floor_no && availableUnitNos.length === 0} // Optional disable if no floor selected
+                       >
+                         <option value="">All Units</option>
+                         {/* Populates from the calculated availableUnitNos */}
+                         {availableUnitNos.map(value => (
+                           <option key={value} value={value}>{`Unit ${value}`}</option>
+                         ))}
+                       </select>
+
+                       {/* Room filter (using uniqueValues) */}
+                       <select
+                         key='room_number'
+                         value={filters.room}
+                         onChange={e => setFilters({ ...filters, room: e.target.value })}
+                         className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm bg-white appearance-none"
+                         aria-label={`Filter by Room`}
+                       >
+                         <option value="">All Rooms</option>
+                         {uniqueValues('room_number').map(value => (
+                           <option key={value} value={value}>{`Room ${value}`}</option>
+                         ))}
+                       </select>
+                      {/* --- END DESKTOP FILTER CHANGES --- */}
+
+                      {/* Search Input with Debounce */}
+                      <div className="relative md:col-span-2 lg:col-span-2 xl:col-span-6"> {/* Adjusted span for better layout */}
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search students by name..."
+                          defaultValue={searchQuery} // Use defaultValue with debounce
+                          onChange={(e) => debouncedSetSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm"
+                          aria-label="Search students by name"
+                        />
+                      </div>
                     </div>
                 </div>
 
 
                 {/* Student List Table */}
-                {/* SUGGESTION: Extract into a <StudentTable /> component */}
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[600px]">
@@ -685,15 +796,16 @@ export default function NotificationManagement() {
                           <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
                           <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Department</th>
                           <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Email</th>
-                           {/* Add other relevant columns if needed */}
-                           {/* <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Batch</th> */}
-                           {/* <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Hostel</th> */}
+                           {/* Add other relevant columns if needed e.g.: */}
+                           {/* <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Floor</th> */}
+                           {/* <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Unit</th> */}
+                           {/* <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Room</th> */}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 bg-white">
                         {filteredStudents.map((student, index) => (
                           <motion.tr
-                            key={student.email} // Use a unique key
+                            key={student.email || student.student_id} // Use a unique key
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.2, delay: index * 0.02 }}
@@ -715,9 +827,10 @@ export default function NotificationManagement() {
                             <td className="px-4 py-3 text-sm font-medium text-gray-800 truncate" title={student.full_name}>{student.full_name}</td>
                             <td className="px-4 py-3 text-sm text-gray-600 truncate" title={student.department}>{student.department}</td>
                             <td className="px-4 py-3 text-sm text-gray-600 truncate" title={student.email}>{student.email}</td>
-                             {/* Add other relevant data cells */}
-                             {/* <td className="px-4 py-3 text-sm text-gray-600">{student.batch}</td> */}
-                             {/* <td className="px-4 py-3 text-sm text-gray-600">{student.hostel_block ? `Block ${student.hostel_block}` : '-'}</td> */}
+                             {/* Add other relevant data cells e.g.: */}
+                             {/* <td className="px-4 py-3 text-sm text-gray-600">{student.Floor_no}</td> */}
+                             {/* <td className="px-4 py-3 text-sm text-gray-600">{student.unit_no}</td> */}
+                             {/* <td className="px-4 py-3 text-sm text-gray-600">{student.room_number}</td> */}
                           </motion.tr>
                         ))}
                       </tbody>
@@ -741,7 +854,6 @@ export default function NotificationManagement() {
 
           ) : (
              // History Tab Content
-             // SUGGESTION: Extract this motion.div block into a <HistoryTab /> component
             <motion.div
               key="history"
               initial="hidden"
@@ -768,7 +880,6 @@ export default function NotificationManagement() {
               </div>
 
                {/* History Filters */}
-               {/* SUGGESTION: Extract into a <HistoryFilters /> component */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 {/* Date Inputs */}
                 <div className="relative">
@@ -822,7 +933,6 @@ export default function NotificationManagement() {
               </div>
 
                {/* History Table */}
-               {/* SUGGESTION: Extract into a <HistoryTable /> component */}
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[700px]">
@@ -931,11 +1041,6 @@ export default function NotificationManagement() {
           )}
         </AnimatePresence>
       </main>
-
-      {/* Optional: Add a footer */}
-      {/* <footer className="text-center py-4 text-xs text-gray-400 border-t mt-8">
-        Notification Management System &copy; {new Date().getFullYear()}
-      </footer> */}
     </div>
   );
 }
