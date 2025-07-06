@@ -13,7 +13,7 @@ async function assignAdminRole(email) {
   await clerkClient.users.updateUser(user.id, {
     publicMetadata: { role: 'admin' },
   });
-  console.log(`User ${email} has been updated to admin role.`);
+  console.log(`User${email} has been updated to admin role.`);
 }
 
 assignAdminRole('mc230041024@iiti.ac.in').catch(console.error);
